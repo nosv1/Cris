@@ -190,9 +190,9 @@ version = "0.1.0"
 dependencies = [
  "dotenv",
  "google-sheets4",
- "hyper",
- "hyper-rustls",
  "regex",
+ "serde",
+ "serde_json",
  "serenity",
  "tokio",
  "yup-oauth2 8.1.0",
