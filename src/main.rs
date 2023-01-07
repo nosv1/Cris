@@ -1,46 +1,28 @@
+pub mod event_handlers;
+pub mod servers;
+
 use dotenv::dotenv;
 
-use serenity::async_trait;
-use serenity::prelude::*;
-use serenity::model::channel::Message;
-use serenity::framework::standard::macros::{command, group};
-use serenity::framework::standard::{StandardFramework, CommandResult};
+use serenity::framework::StandardFramework;
+use serenity::model::prelude::*;
+use serenity::Client;
 
-#[group]
-#[commands(ping)]
-struct General;
-
-struct Handler;
-
-#[async_trait]
-impl EventHandler for Handler {}
+use event_handlers::on_message::OnMessageHandler;
 
 #[tokio::main]
-async fn main() {
-    let framework = StandardFramework::new()
-        .configure(|c| c.prefix("~")) // set the bot's prefix to "~"
-        .group(&GENERAL_GROUP);
-
-    // Login with a bot token from the environment
-    // let token = env::var("DISCORD_TOKEN").expect("token");
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     let token = std::env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-    let intents = GatewayIntents::non_privileged() | GatewayIntents::MESSAGE_CONTENT;
+    let intents = GatewayIntents::non_privileged() | GatewayIntents::privileged();
     let mut client = Client::builder(token, intents)
-        .event_handler(Handler)
-        .framework(framework)
-        .await
-        .expect("Error creating client");
+        .event_handler(OnMessageHandler)
+        .framework(StandardFramework::new())
+        .await?;
 
     // start listening for events by starting a single shard
     if let Err(why) = client.start().await {
         println!("An error occurred while running the client: {:?}", why);
     }
-}
-
-#[command]
-async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Pong!").await?;
 
     Ok(())
 }
