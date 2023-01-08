@@ -1,16 +1,12 @@
 extern crate google_sheets4 as sheets4;
-use serde_json::Value;
-use sheets4::api::{ValueRange, Sheet, NamedRange};
+use sheets4::api::{Sheet, NamedRange, BatchUpdateValuesRequest};
 use sheets4::hyper::client::HttpConnector;
 use sheets4::hyper_rustls::HttpsConnector;
-use sheets4::oauth2::{ApplicationSecret, InstalledFlowAuthenticator};
-use sheets4::{Result, Error};
+use sheets4::oauth2::{InstalledFlowAuthenticator};
+use sheets4::{Result};
 use sheets4::{Sheets, oauth2, hyper, hyper_rustls};
 
-use serde::Deserialize;
-
 use std::collections::HashMap;
-use std::fs;
 
 // pub const GUILD_ID: &str = "450289520009543690";                 // TEPCOTT
 // pub const SUBMISSIONS_CHANNEL_ID: &str = "1058730856073670656";  // #submissions
@@ -22,8 +18,6 @@ const CLIENT_SECRET: &str = "src/servers/tepcott/google_api/client_secret.json";
 const SEASON_7_SPREADSHEET_KEY: &str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU";
 
 async fn get_sheets_client() -> Result<Sheets<HttpsConnector<HttpConnector>>>{
-
-    let cwd = std::env::current_dir().unwrap();
     let google_apis_secret_path = std::path::Path::new(CLIENT_SECRET);
 
     // secret
@@ -89,7 +83,9 @@ pub async fn submit_quali_time(user_id: &str, lap_time: &str, link: &str) {
     let quali_drivers_range = quali_drivers_named_range.range.as_ref().unwrap();
     let quali_lap_times_range = quali_lap_times_named_range.range.as_ref().unwrap();
 
-    let quali_values = sheets_client.spreadsheets().values_batch_get(spreadsheet.spreadsheet_id.as_ref().unwrap())
+    let mut quali_values = sheets_client.spreadsheets().values_batch_get(
+        spreadsheet.spreadsheet_id.as_ref().unwrap()
+    )
         .value_render_option("FORMATTED_VALUE")
         .add_ranges(&format!("{}!R{}C{}:R{}C{}", 
             "qualifying", 
@@ -110,5 +106,26 @@ pub async fn submit_quali_time(user_id: &str, lap_time: &str, link: &str) {
         .await
         .unwrap()
         .1;
+
+    quali_values
+        .value_ranges.as_mut().unwrap()[1]
+        .values.as_mut().unwrap()[1] = ["1:23.456".to_string()].to_vec();
+    
+    sheets_client.spreadsheets().values_batch_update(
+        BatchUpdateValuesRequest { 
+            data: quali_values.value_ranges, 
+            include_values_in_response: Some(false), 
+            response_date_time_render_option: Some("FORMATTED_STRING".to_string()),
+            response_value_render_option: Some("FORMATTED_VALUE".to_string()),
+            value_input_option: Some("USER_ENTERED".to_string()),
+        }, 
+        spreadsheet.spreadsheet_id.as_ref().unwrap()
+    )
+        .doit()
+        .await
+        .unwrap();
+
+    println!("Submitted quali time for user {} with lap time {} and link {}", user_id, lap_time, link)
+
 
 }
