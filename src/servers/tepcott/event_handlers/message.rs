@@ -10,9 +10,9 @@ pub async fn message(context: Context, msg: Message) {
         let mut split_message = msg.content.split(" ");  // split message into words
         let command = split_message.next();             // get first word
 
-        if command.unwrap_or("") == "!submit" {                     // if first word is !submit
-            tepcott::commands::submit::
-                submit(context.clone(), msg.clone(), split_message).await;  // handle submit command
+        if let Some("!submit") = command {                    // if first word is !submit
+            let _ = tepcott::commands::submit::
+                submit(&context, &msg, split_message).await;  // handle submit command
         }
     }
 }

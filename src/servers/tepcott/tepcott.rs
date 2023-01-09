@@ -48,34 +48,58 @@ async fn get_sheets_client() -> Result<Sheets<HttpsConnector<HttpConnector>>>{
 }
 
 
-pub async fn submit_quali_time(user_id: &str, lap_time: &str, link: &str) {
+pub async fn submit_quali_time(user_id: &str, lap_time: &str, link: &str) -> Result<bool> {
 
     println!("Submitting quali time for user {} with lap time {} and link {}", user_id, lap_time, link);
 
-    let sheets_client = get_sheets_client()
-        .await
-        .unwrap();
+    let sheets_client = match get_sheets_client().await {
+        Ok(sheets_client) => sheets_client,
+        Err(e) => Err(e)?,
+    };
 
-    let spreadsheet = sheets_client.spreadsheets().get(SEASON_7_SPREADSHEET_KEY)
+    let spreadsheet = match sheets_client
+        .spreadsheets()
+        .get(SEASON_7_SPREADSHEET_KEY)
         .include_grid_data(false)
         .doit()
-        .await
-        .unwrap()
-        .1;
+        .await {                                                                // spreadsheet
+            Ok(spreadsheet) => spreadsheet.1,
+            Err(e) => Err(e)?,
+        };
+    
         
-    let sheets: HashMap<String, Sheet> = spreadsheet.sheets.as_ref()
-        .unwrap()
-        .iter()
-        .map(|sheet| (sheet.properties.as_ref().unwrap().title.as_ref().unwrap().clone(), sheet.clone()))
-        .collect::<HashMap<String, Sheet>>();
+    // TODO: IDEALLY THE BELOW TWO MATCH STATEMENTS SHOULD BE IN THEIR OWN 'CLASS'
+    let mut sheets: HashMap<String, &Sheet> = HashMap::new();
+    match &spreadsheet.sheets {                                                 // sheets
+        Some(sheets_vec) => {
+            for sheet in sheets_vec.iter() {
+                match &sheet.properties {
+                    Some(properties) => match &properties.title {
+                        Some(title) => sheets.insert(title.to_string(), sheet),
+                        None => continue,
+                    },
+                    None => continue,
+                };
+            }
+        }
+        None => return Ok(false),
+    }
+    
+    let mut named_ranges: HashMap<String, &NamedRange> = HashMap::new();
+    match &spreadsheet.named_ranges {                                           // named ranges
+        Some(named_ranges_vec) => {
+            for named_range in named_ranges_vec.iter() {
+                match &named_range.name {
+                    Some(name) => named_ranges.insert(name.to_string(), named_range),
+                    None => continue,
+                };
+            }
+        }
+        None => return Ok(false),
+    }
+    // END MATCH STATEMENTS
 
-    let named_ranges = spreadsheet.named_ranges.as_ref()
-        .unwrap()
-        .iter()
-        .map(|named_range| (named_range.name.clone().unwrap(), named_range.clone()))
-        .collect::<std::collections::HashMap<String, NamedRange>>();
-
-    let quali_sheet = sheets.get("qualifying").unwrap();
+    let _quali_sheet = sheets.get("qualifying").unwrap();
 
     let quali_drivers_named_range = named_ranges.get("qualifying_drivers").unwrap();
     let quali_lap_times_named_range = named_ranges.get("qualifying_lap_times").unwrap();
@@ -89,17 +113,17 @@ pub async fn submit_quali_time(user_id: &str, lap_time: &str, link: &str) {
         .value_render_option("FORMATTED_VALUE")
         .add_ranges(&format!("{}!R{}C{}:R{}C{}", 
             "qualifying", 
-            quali_drivers_range.start_row_index.as_ref().unwrap() + 1, 
-            quali_drivers_range.start_column_index.as_ref().unwrap() + 1, 
-            quali_drivers_range.end_row_index.as_ref().unwrap() + 1, 
-            quali_drivers_range.end_column_index.as_ref().unwrap() + 1
+            &quali_drivers_range.start_row_index.unwrap() + 1, 
+            &quali_drivers_range.start_column_index.unwrap() + 1, 
+            &quali_drivers_range.end_row_index.unwrap() + 1, 
+            &quali_drivers_range.end_column_index.unwrap() + 1
         ))
         .add_ranges(&format!("{}!R{}C{}:R{}C{}", 
             "qualifying", 
-            quali_lap_times_range.start_row_index.as_ref().unwrap() + 1, 
-            quali_lap_times_range.start_column_index.as_ref().unwrap() + 1, 
-            quali_lap_times_range.end_row_index.as_ref().unwrap() + 1, 
-            quali_lap_times_range.end_column_index.as_ref().unwrap() + 1
+            &quali_lap_times_range.start_row_index.unwrap() + 1,
+            &quali_lap_times_range.start_column_index.unwrap() + 1,
+            &quali_lap_times_range.end_row_index.unwrap() + 1,
+            &quali_lap_times_range.end_column_index.unwrap() + 1
         ))
         .major_dimension("ROWS")
         .doit()
@@ -125,7 +149,9 @@ pub async fn submit_quali_time(user_id: &str, lap_time: &str, link: &str) {
         .await
         .unwrap();
 
-    println!("Submitted quali time for user {} with lap time {} and link {}", user_id, lap_time, link)
+    println!("Submitted quali time for user {} with lap time {} and link {}", user_id, lap_time, link);
+
+    Ok(true)
 
 
 }

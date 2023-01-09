@@ -195,6 +195,7 @@ dependencies = [
  "serde_json",
  "serenity",
  "tokio",
+ "tracing",
  "yup-oauth2 8.1.0",
 ]
 
