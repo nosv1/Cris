@@ -8,11 +8,11 @@ use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
 
 use std::collections::HashMap;
 
-// pub const GUILD_ID: &str = "450289520009543690";                 // TEPCOTT
-// pub const SUBMISSIONS_CHANNEL_ID: &str = "1058730856073670656";  // #submissions
+pub const GUILD_ID: &str = "450289520009543690";                 // TEPCOTT
+pub const SUBMISSIONS_CHANNEL_ID: &str = "1058730856073670656";  // #submissions
 
-pub const GUILD_ID: &str = "789181254120505386"; // Phyner
-pub const SUBMISSIONS_CHANNEL_ID: &str = "789182513633427507"; // #private-testing
+// pub const GUILD_ID: &str = "789181254120505386"; // Phyner
+// pub const SUBMISSIONS_CHANNEL_ID: &str = "789182513633427507"; // #private-testing
 
 const CLIENT_SECRET: &str = "src/servers/tepcott/google_api/client_secret.json"; // src/servers/tepcott/tepcott-30c3532764ae.json
 const SEASON_7_SPREADSHEET_KEY: &str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU";
