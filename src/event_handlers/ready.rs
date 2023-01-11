@@ -6,5 +6,5 @@ pub struct ReadyHandler;
 
 pub async fn ready(ctx: Context, ready: Ready) {
     println!("{} is connected!", ready.user.name);
-    ctx.set_presence(None, OnlineStatus::Invisible).await;
+    // ctx.set_presence(None, OnlineStatus::Invisible).await;
 }
