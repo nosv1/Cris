@@ -10,6 +10,11 @@ use super::super::tepcott::submit_quali_time;
 pub async fn submit(context: &Context, msg: &Message, mut split_message: Split<'_, &str>) -> Result<(), Box<dyn std::error::Error>> {
     println!("Handling submit command...");
 
+    let guild_id = match msg.guild_id {
+        Some(guild_id) => guild_id,
+        None => return Ok(()),
+    };
+
     let time = split_message.next();
     let link = split_message.next();
 
@@ -45,7 +50,12 @@ pub async fn submit(context: &Context, msg: &Message, mut split_message: Split<'
 
     // if valid time and link,
     let _ = submit_quali_time(
+        &msg.author
+            .nick_in(&context.http, guild_id)
+            .await
+            .unwrap_or_else(|| msg.author.name.clone()),
         &msg.author.id.0.to_string().as_str(),
+        &msg.timestamp.to_string(),
         time.unwrap(), 
         link.unwrap()
     ).await;

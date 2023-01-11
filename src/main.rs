@@ -7,12 +7,14 @@ use serenity::Client;
 use serenity::framework::StandardFramework;
 use serenity::prelude::GatewayIntents;
 
+use tracing::info;
+
 use event_handlers::message::MessageHandler;
 use event_handlers::ready::ReadyHandler;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Connecting bot...");
+    info!("Connecting bot...");
     dotenv().ok();
     let token = std::env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     let intents = GatewayIntents::non_privileged() | GatewayIntents::privileged();
