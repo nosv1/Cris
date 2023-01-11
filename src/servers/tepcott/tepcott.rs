@@ -1,13 +1,11 @@
 extern crate google_sheets4 as sheets4;
-use serde::de::value;
-use sheets4::api::{BatchUpdateValuesRequest, GridRange, NamedRange, Sheet};
+use sheets4::api::{BatchUpdateValuesRequest, NamedRange, Sheet};
 use sheets4::hyper::client::HttpConnector;
 use sheets4::hyper_rustls::HttpsConnector;
 use sheets4::oauth2::InstalledFlowAuthenticator;
 use sheets4::Result;
 use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
 
-use std::borrow::Borrow;
 use std::collections::HashMap;
 
 // pub const GUILD_ID: &str = "450289520009543690";                 // TEPCOTT
@@ -238,8 +236,6 @@ pub async fn submit_quali_time(
         }
     }
 
-    println!("quali_submissions_values: {:?}", quali_submissions_values.value_ranges);
-
     sheets_client.spreadsheets().values_batch_update(
         BatchUpdateValuesRequest {
             data: quali_submissions_values.value_ranges,
@@ -253,7 +249,7 @@ pub async fn submit_quali_time(
         .doit()
         .await?;
 
-    // println!("Submitted quali time for user {} with lap time {} and link {}", user_id, lap_time, link);
+    println!("Submitted quali time for user {} with lap time {} and link {}", user_id, lap_time, link);
 
     Ok(true)
 }

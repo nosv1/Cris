@@ -9,8 +9,7 @@ use serenity::prelude::GatewayIntents;
 
 use tracing::info;
 
-use event_handlers::message::MessageHandler;
-use event_handlers::ready::ReadyHandler;
+use event_handlers::event_handlers::Handler;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,8 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = std::env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     let intents = GatewayIntents::non_privileged() | GatewayIntents::privileged();
     let mut client = Client::builder(token, intents)
-        .event_handler(ReadyHandler)
-        .event_handler(MessageHandler)
+        .event_handler(Handler)
         .framework(StandardFramework::new())
         .await?;
 
