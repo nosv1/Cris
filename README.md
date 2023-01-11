@@ -3,10 +3,10 @@
 - [ ] Automatically update division roles upon command.
 
 ## Libraries and Tools Used
-- ChatGPT: An AI model for natural language processing and text generation.
-- GitHub Copilot: A tool for helping developers work more efficiently with GitHub.
-- Serenity: A Rust library for building fast and efficient Discord bots.
-- google_sheets4: An API that allows communication and data manipulation with Google Sheets.
+- [ChatGPT](https://openai.com/blog/chatgpt/): An AI model for natural language processing and text generation.
+- [GitHub Copilot](https://github.com/features/copilot): A tool for helping developers work more efficiently with GitHub.
+- [Serenity](https://docs.rs/serenity/latest/serenity/): A Rust library for building fast and efficient Discord bots.
+- [google_sheets4](https://docs.rs/google-sheets4/latest/google_sheets4/): An API that allows communication and data manipulation with Google Sheets.
 
 ## License
 This project is licensed under the MIT License.
