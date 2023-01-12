@@ -8,6 +8,10 @@
 - [Serenity](https://docs.rs/serenity/latest/serenity/): A Rust library for building fast and efficient Discord bots.
 - [google_sheets4](https://docs.rs/google-sheets4/latest/google_sheets4/): An API that allows communication and data manipulation with Google Sheets.
 
+## Notes for Use
+- The project requires a missing `.env` file, which should contain the variable `DISCORD_BOT_TOKEN`.
+- The project also requires a `client_secret.json` file which is missing in the `servers/tepcott/google_api` folder. This file can be obtained from Google's OAuth credentials.
+
 ## License
 This project is licensed under the MIT License.
 
