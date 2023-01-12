@@ -1,6 +1,6 @@
 ## Current Functionality
 - [x] Read #submissions for qualifying submissions and post them to the spreadsheet.
-- [ ] Automately update division roles upon command.
+- [ ] Automatically update division roles upon command.
 
 ## Libraries and Tools Used
 - [ChatGPT](https://openai.com/blog/chatgpt/): An AI model for natural language processing and text generation.
