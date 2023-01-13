@@ -88,8 +88,8 @@ pub async fn submit_quali_time(
     link: &str,
 ) -> Result<bool> {
     println!(
-        "Submitting quali time for user {} with lap time {} and link {}",
-        user_id, lap_time, link
+        "Submitting quali time for {} with lap time {} and link {}",
+        driver, lap_time, link
     );
 
     let sheets_client = match get_sheets_client().await {
@@ -248,8 +248,11 @@ pub async fn submit_quali_time(
     )
         .doit()
         .await?;
-
-    println!("Submitted quali time for user {} with lap time {} and link {}", user_id, lap_time, link);
+        
+    println!(
+        "{}: {} submitted a lap time of {}s with proof {} to the spreadsheet", 
+        timestamp, driver, lap_time, link
+    );
 
     Ok(true)
 }
