@@ -1,6 +1,8 @@
 extern crate google_sheets4 as sheets4;
 use std::collections::HashMap;
 
+use serenity::model::prelude::RoleId;
+
 use sheets4::api::{Spreadsheet, Sheet, NamedRange};
 use sheets4::hyper::client::HttpConnector;
 use sheets4::hyper_rustls::HttpsConnector;
@@ -11,6 +13,7 @@ use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
 pub const GUILD_ID: &str = "450289520009543690";                 // TEPCOTT
 pub const SUBMISSIONS_CHANNEL_ID: &str = "1058730856073670656";  // #submissions
 pub const IGNORE_2_CHANNEL_ID: &str = "648538067573145643";      // #ignore-2
+pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(693801603928555550);         // Admin Role ID
 
 // pub const GUILD_ID: &str = "789181254120505386"; // Phyner
 // pub const SUBMISSIONS_CHANNEL_ID: &str = "789182513633427507"; // #private-testing
