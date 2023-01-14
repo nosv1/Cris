@@ -10,10 +10,10 @@ pub struct Handler;
 
 #[serenity::async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
-        message::message(ctx, msg).await;
-    }
     async fn ready(&self, ctx: Context, ready: Ready) {
         ready::ready(ctx, ready).await;
+    }
+    async fn message(&self, ctx: Context, msg: Message) {
+        message::message(ctx, msg).await;
     }
 }
