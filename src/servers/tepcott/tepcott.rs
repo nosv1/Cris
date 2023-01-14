@@ -10,9 +10,11 @@ use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
 
 pub const GUILD_ID: &str = "450289520009543690";                 // TEPCOTT
 pub const SUBMISSIONS_CHANNEL_ID: &str = "1058730856073670656";  // #submissions
+pub const IGNORE_2_CHANNEL_ID: &str = "648538067573145643";      // #ignore-2
 
 // pub const GUILD_ID: &str = "789181254120505386"; // Phyner
 // pub const SUBMISSIONS_CHANNEL_ID: &str = "789182513633427507"; // #private-testing
+// pub const IGNORE_2_CHANNEL_ID: &str = "789182513633427507";      // #ignore-2
 
 const CLIENT_SECRET: &str = "src/servers/tepcott/google_api/client_secret.json"; // src/servers/tepcott/tepcott-30c3532764ae.json
 pub const SEASON_7_SPREADSHEET_KEY: &str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU";
@@ -45,7 +47,6 @@ pub fn a1_to_r1c1(a1_range: String) -> String {
     return r1c1_range;
 }
 
-// return hashmap or error
 pub fn get_spreadsheet_sheets(spreadsheet: Spreadsheet) -> Result<HashMap<String, Sheet>, String> {
     let mut sheets: HashMap<String, Sheet> = HashMap::new(); // sheets
     for sheet in spreadsheet.sheets.unwrap().iter() {
@@ -62,7 +63,6 @@ pub fn get_spreadsheet_sheets(spreadsheet: Spreadsheet) -> Result<HashMap<String
     Ok(sheets)
 }
 
-
 pub fn get_spreadsheet_named_ranges(spreadsheet: Spreadsheet) -> Result<HashMap<String, NamedRange>, String> {
     let mut named_ranges: HashMap<String, NamedRange> = HashMap::new();
     for named_range in spreadsheet.named_ranges.unwrap().iter() {
@@ -76,7 +76,6 @@ pub fn get_spreadsheet_named_ranges(spreadsheet: Spreadsheet) -> Result<HashMap<
     }
     Ok(named_ranges)
 }
-
 
 pub async fn get_sheets_client() -> SheetsResult<Sheets<HttpsConnector<HttpConnector>>> {
     let google_apis_secret_path = std::path::Path::new(CLIENT_SECRET);

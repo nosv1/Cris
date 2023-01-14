@@ -46,7 +46,7 @@ async fn submit_quali_time(
         None => return Ok(false),
     };
 
-    let sheets = match tepcott::get_spreadsheet_sheets(spreadsheet.clone()) {
+    let _sheets = match tepcott::get_spreadsheet_sheets(spreadsheet.clone()) {
         Ok(sheets) => sheets,
         Err(_) => { return Ok(false); }
     };
