@@ -6,9 +6,9 @@ use serenity::model::prelude::RoleId;
 use sheets4::api::{Spreadsheet, Sheet, NamedRange};
 use sheets4::hyper::client::HttpConnector;
 use sheets4::hyper_rustls::HttpsConnector;
-use sheets4::oauth2::InstalledFlowAuthenticator;
+use sheets4::oauth2::{ServiceAccountAuthenticator, ServiceAccountKey, read_service_account_key};
 use sheets4::Result as SheetsResult;
-use sheets4::{hyper, hyper_rustls, oauth2, Sheets};
+use sheets4::{hyper, hyper_rustls, Sheets};
 
 pub const GUILD_ID: &str = "450289520009543690";                 // TEPCOTT
 pub const SUBMISSIONS_CHANNEL_ID: &str = "1058730856073670656";  // #submissions
@@ -18,8 +18,10 @@ pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(693801603928555550);         // Admi
 // pub const GUILD_ID: &str = "789181254120505386"; // Phyner
 // pub const SUBMISSIONS_CHANNEL_ID: &str = "789182513633427507"; // #private-testing
 // pub const IGNORE_2_CHANNEL_ID: &str = "789182513633427507";      // #ignore-2
+// pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(0);         // Admin Role ID
 
-const CLIENT_SECRET: &str = "src/servers/tepcott/google_api/client_secret.json"; // src/servers/tepcott/tepcott-30c3532764ae.json
+// const CLIENT_SECRET: &str = "src/servers/tepcott/google_api/client_secret.json";
+const SERVICE_ACCOUNT_KEY: &str = "src/servers/tepcott/google_api/tepcott.json";
 pub const SEASON_7_SPREADSHEET_KEY: &str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU";
 
 pub fn a1_to_r1c1(a1_range: String) -> String {
@@ -81,23 +83,16 @@ pub fn get_spreadsheet_named_ranges(spreadsheet: Spreadsheet) -> Result<HashMap<
 }
 
 pub async fn get_sheets_client() -> SheetsResult<Sheets<HttpsConnector<HttpConnector>>> {
-    let google_apis_secret_path = std::path::Path::new(CLIENT_SECRET);
-
     // secret
-    let secret: oauth2::ApplicationSecret =
-        oauth2::read_application_secret(google_apis_secret_path)
-            .await
-            .expect("Error reading client secret file");
+    let secret: ServiceAccountKey = read_service_account_key(SERVICE_ACCOUNT_KEY)
+        .await
+        .expect("Error reading client secret");
 
     // authenticator
-    let auth = InstalledFlowAuthenticator::builder(
-        secret,
-        oauth2::InstalledFlowReturnMethod::HTTPRedirect,
-    )
-    .persist_tokens_to_disk("src/servers/tepcott/google_api/token.json")
-    .build()
-    .await
-    .expect("Error building authenticator");
+    let auth = ServiceAccountAuthenticator::builder(secret)
+        .build()
+        .await
+        .expect("Error building authenticator");
 
     // sheets client
     let sheets_client = Sheets::new(
