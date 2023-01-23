@@ -1,7 +1,7 @@
 ## Current Functionality
 - [x] Read #submissions for qualifying submissions and post them to the spreadsheet.
-- [x] Automatically update division roles upon command.
-- [x] Display the predicted qualifying cutoffs for each division.
+- [x] Automatically update division roles upon command. `!updatedivs`
+- [x] Display the predicted qualifying cutoffs for each division. `!cutoffs`
 
 ## Libraries and Tools Used
 - [ChatGPT](https://openai.com/blog/chatgpt/): An AI model for natural language processing and text generation.
