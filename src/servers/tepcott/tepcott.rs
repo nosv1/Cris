@@ -16,13 +16,14 @@ pub const IGNORE_2_CHANNEL_ID: &str = "648538067573145643";      // #ignore-2
 pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(693801603928555550);         // Admin Role ID
 
 // pub const GUILD_ID: &str = "789181254120505386"; // Phyner
-// pub const SUBMISSIONS_CHANNEL_ID: &str = "789182513633427507"; // #private-testing
+// pub const SUBMISSIONS_CHANNEL_ID: &str = ""; // #private-testing
 // pub const IGNORE_2_CHANNEL_ID: &str = "789182513633427507";      // #ignore-2
 // pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(0);         // Admin Role ID
 
 // const CLIENT_SECRET: &str = "src/servers/tepcott/google_api/client_secret.json";
 const SERVICE_ACCOUNT_KEY: &str = "src/servers/tepcott/google_api/tepcott.json";
 pub const SEASON_7_SPREADSHEET_KEY: &str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU";
+pub const SEASON_7_LOGO_PATH: &str = "src/servers/tepcott/images/season_7_logo.png";
 
 pub fn a1_to_r1c1(a1_range: String) -> String {
     let parts = a1_range.split("!").collect::<Vec<&str>>();

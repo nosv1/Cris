@@ -19,7 +19,11 @@ pub async fn message(context: Context, message: Message) {
             Some("!submit") => {                    // if first word is !submit
                 let _ = tepcott::commands::submit::
                     submit(&context, &message, split_message).await;  // handle submit command
-            }
+            },
+            Some("!cutoffs") => {
+                let _ = tepcott::commands::qualifying::
+                    display_cutoffs(&context, &message).await;
+            },
             _ => {}
         }
     } else if channel_id == tepcott::tepcott::IGNORE_2_CHANNEL_ID {
