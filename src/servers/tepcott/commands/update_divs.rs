@@ -75,10 +75,12 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
 
     let roster_divs_range = named_ranges.get("roster_divs");
     let roster_discord_ids_range = named_ranges.get("roster_discord_ids");
+    let roster_social_club_range = named_ranges.get("roster_drivers");
 
     let roster_ranges_vec = vec![
         roster_divs_range,
         roster_discord_ids_range,
+        roster_social_club_range,
     ];
 
     let mut ranges_hashmap: HashMap<String, String> = HashMap::new();
@@ -97,7 +99,7 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
                 .and_then(|range| range.name.as_ref())
                 .is_none()
         { 
-            println!("Error: Missing range or name for named range: {:?}", range);
+            println!("Error: Missing range or name for named range: {:?}", range);  // was there any divisions??
             return Ok(()); 
         }
 
@@ -159,6 +161,7 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
 
     let mut roster_divs_values: Vec<String> = vec![];
     let mut roster_discord_ids_values: Vec<String> = vec![];
+    let mut roster_social_club_values: Vec<String> = vec![];
 
     for value_range in range_values.value_ranges.unwrap().iter() {
         if value_range.range.is_none() || value_range.values.is_none() {
@@ -174,6 +177,9 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
             },
             "roster_discord_ids" => {
                 roster_discord_ids_values = values[0].clone();
+            },
+            "roster_drivers" => {
+                roster_social_club_values = values[0].clone();
             },
             _ => {
                 println!("Unknown range name: {}", name);
@@ -205,6 +211,7 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
         }
     }
     
+    // this loop updates drivers if they already have a div role
     for (role_id, members) in guild_roles.iter_mut() {
         let role = guild.roles.get(role_id).unwrap();
         if !role.name.to_lowercase().starts_with("div") { continue; }
@@ -216,16 +223,32 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
         for member in members {
             let member_id = member.user.id.to_string();
 
-            if !drivers.contains_key(&member_id) { continue; }
-            let _ = message.channel_id.say(
-                &context.http, 
-                format!("{} is not on the roster...", member.mention())
-            ).await;
+            if !drivers.contains_key(&member_id) {                      // does not exist on roster but has div role ??
+                let _ = message.channel_id.say(
+                    &context.http, 
+                    format!("{} is not on the roster but has division role {}", member.user.name, role.name)
+                ).await;
+                continue;
+            }
 
-            let driver_division = drivers.get(&member_id).unwrap().clone();
+            let discord_name = &member.display_name().to_string();
+            let social_club = &roster_social_club_values[
+                roster_discord_ids_values
+                    .iter()
+                    .position(|x| x.as_str() == member_id.to_string())
+                    .unwrap()
+                ];
+
+            let driver_division = drivers.get(&member_id)        // division driver is supposed to be in
+                .unwrap()
+                .clone();
             drivers.remove(&member_id);
             
-            if driver_division == role_division { continue; }            // driver is in correct division
+            if driver_division == role_division {                       // driver is in correct division
+                tepcott::format_discord_name(context, &member, &discord_name, &social_club)
+                    .await;
+                continue;
+            }
 
             let previous_channel_id: ChannelId = ChannelId(DIV_CHANNEL_IDS[role_division].parse().unwrap());
             member.remove_role(context.http.clone(), role_id).await?;
@@ -236,11 +259,17 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
             println!("Removed {} from {}", member.display_name(), role.name);
             
             if driver_division == 0 { continue; }                       // driver is not in a division
+
+                                                                        // if we got here, we know driver needs to be in a division
+            tepcott::format_discord_name(context, member, &discord_name, &social_club)
+                .await;
             let driver_division_role_id = DIV_ROLES_IDS[driver_division].parse().unwrap();
             let driver_division_role = guild.roles.get(&RoleId(driver_division_role_id)).unwrap();
 
             let new_channel_id: ChannelId = ChannelId(DIV_CHANNEL_IDS[driver_division].parse().unwrap());
-            member.add_role(context.http.clone(), driver_division_role_id).await?;
+            member                                                      // add driver to division role
+                .add_role(context.http.clone(), driver_division_role_id)
+                .await?;
             new_channel_id.say(
                 &context.http, 
                 format!("Welcome to Division {}, {}!", driver_division, member.mention())
@@ -249,6 +278,7 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
         }
     }
 
+    // this loop adds drivers who for some reason didn't have a div role
     for (discord_id, division) in drivers {
         if division == 0 { continue; }  // driver is not in any division, they were already removed, if they were, in the loop above
 
@@ -257,6 +287,16 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
 
         let member_id = discord_id.parse().unwrap();
         let member = guild.members.get(&member_id).unwrap();
+
+        let discord_name = member.display_name();    // format discord name
+        let social_club = &roster_social_club_values[
+            roster_discord_ids_values
+                .iter()
+                .position(|x| x.as_str() == member_id.to_string())
+                .unwrap()
+            ];
+        tepcott::format_discord_name(context, &member, &discord_name, &social_club)
+            .await;
 
         let new_channel_id: ChannelId = ChannelId(DIV_CHANNEL_IDS[division].parse().unwrap());
 

@@ -1,8 +1,9 @@
-extern crate google_sheets4 as sheets4;
 use std::collections::HashMap;
 
-use serenity::model::prelude::RoleId;
+use serenity::model::prelude::{RoleId, Member};
+use serenity::prelude::Context;
 
+extern crate google_sheets4 as sheets4;
 use sheets4::api::{Spreadsheet, Sheet, NamedRange};
 use sheets4::hyper::client::HttpConnector;
 use sheets4::hyper_rustls::HttpsConnector;
@@ -24,6 +25,33 @@ pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(693801603928555550);         // Admi
 const SERVICE_ACCOUNT_KEY: &str = "src/servers/tepcott/google_api/tepcott.json";
 pub const SEASON_7_SPREADSHEET_KEY: &str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU";
 pub const SEASON_7_LOGO_PATH: &str = "src/servers/tepcott/images/season_7_logo.png";
+
+pub async fn format_discord_name(context: &Context, member: &Member, discord_name: &str, social_club: &str) {
+    // Mo (Mo_v0)
+    let re = regex::Regex::new(r"\(.*\)").unwrap();
+    let outside: String;
+    if let Some(captures) = re.captures(&discord_name) {
+        let inside = captures.get(0).unwrap().as_str().to_string();
+        outside = discord_name.replace(&inside, "").trim().to_string();
+    } else {
+        outside = discord_name.to_string();
+    }
+
+    if outside.trim().eq(social_club) {
+        return;
+    }
+
+    let new_name = format!("{} ({})", social_club, &outside);
+
+    match member.edit(&context, |m| m.nickname(&new_name)).await {
+        Ok(_) => {
+            println!("Changed nickname for {} to {}", discord_name, &new_name);
+        },
+        Err(e) => {
+            println!("Error changing nickname for {} to {}: {}", discord_name, &new_name, e);
+        }
+    }
+}
 
 pub fn a1_to_r1c1(a1_range: String) -> String {
     let parts = a1_range.split("!").collect::<Vec<&str>>();
