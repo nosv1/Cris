@@ -1,6 +1,7 @@
 ## Current Functionality
 - [x] Read #submissions for qualifying submissions and post them to the spreadsheet.
 - [x] Automatically update division roles upon command. `!updatedivs`
+    - [x] Also updates discord names to be `social_club (discord)`
 - [x] Display the predicted qualifying cutoffs for each division. `!cutoffs`
 
 ## Libraries and Tools Used
