@@ -56,7 +56,7 @@ async fn submit_quali_time(
         Err(_) => { return Ok(false); }
     };
     
-    let quali_submissions_drivers_range = named_ranges.get("quali_submissions_drivers");
+    let quali_submissions_drivers_range = named_ranges.get("quali_submissions_submitters");
     let quali_submissions_discord_ids_range = named_ranges.get("quali_submissions_discord_ids");
     let quali_submissions_timestamps_range = named_ranges.get("quali_submissions_timestamps");
     let quali_submissions_lap_times_range = named_ranges.get("quali_submissions_lap_times");
@@ -136,7 +136,7 @@ async fn submit_quali_time(
         let name = quali_submission_ranges_hashmap.get(&range).unwrap();
         let values = value_range.values.as_mut().unwrap();
         match name.as_str() {
-            "quali_submissions_drivers" => {
+            "quali_submissions_submitters" => {
                 values[0].push(driver.to_string());
             },
             "quali_submissions_discord_ids" => {
