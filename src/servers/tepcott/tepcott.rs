@@ -4,7 +4,7 @@ use serenity::model::prelude::{RoleId, Member};
 use serenity::prelude::Context;
 
 extern crate google_sheets4 as sheets4;
-use sheets4::api::{Spreadsheet, Sheet, NamedRange};
+use sheets4::api::{NamedRange, Spreadsheet, Sheet, ValueRange};
 use sheets4::hyper::client::HttpConnector;
 use sheets4::hyper_rustls::HttpsConnector;
 use sheets4::oauth2::{ServiceAccountAuthenticator, ServiceAccountKey, read_service_account_key};
@@ -17,7 +17,7 @@ pub const IGNORE_2_CHANNEL_ID: &str = "648538067573145643";      // #ignore-2
 pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(693801603928555550);         // Admin Role ID
 
 // pub const GUILD_ID: &str = "789181254120505386"; // Phyner
-// pub const SUBMISSIONS_CHANNEL_ID: &str = ""; // #private-testing
+// pub const SUBMISSIONS_CHANNEL_ID: &str = "789182513633427507"; // #private-testing
 // pub const IGNORE_2_CHANNEL_ID: &str = "789182513633427507";      // #ignore-2
 // pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(0);         // Admin Role ID
 
@@ -25,6 +25,77 @@ pub const DOUBLE_D_ROLE_ID: RoleId = RoleId(693801603928555550);         // Admi
 const SERVICE_ACCOUNT_KEY: &str = "src/servers/tepcott/google_api/tepcott.json";
 pub const SEASON_7_SPREADSHEET_KEY: &str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU";
 pub const SEASON_7_LOGO_PATH: &str = "src/servers/tepcott/images/season_7_logo.png";
+
+pub async fn get_range_value_ranges(
+    sheets_client: &Sheets<HttpsConnector<HttpConnector>>,
+    spreadsheet_id: &String,
+    major_dimension: &str,
+    ranges: Vec<Option<&NamedRange>>, 
+    sheet_name: &str,
+    ranges_hashmap: &mut HashMap<String, String>,
+) -> Vec<ValueRange> {
+
+    let mut range_request = sheets_client
+        .spreadsheets()
+        .values_batch_get(spreadsheet_id)
+        .value_render_option("FORMATTED_VALUE")
+        .major_dimension(major_dimension);
+
+    for range in ranges.iter() {
+        if range
+            .and_then(|range| range.range.as_ref())
+            .is_none()
+            || range
+                .and_then(|range| range.named_range_id.as_ref())
+                .is_none()
+        {
+            continue;
+        }
+        let grid_range = range.as_ref().unwrap()
+            .range.as_ref().unwrap();
+        let name = range.as_ref().unwrap()
+            .name.as_ref().unwrap();
+
+        let start_row_index = match &grid_range.start_row_index {
+            Some(start_row_index) => start_row_index,
+            None => return vec![],
+        };
+        let start_column_index = match &grid_range.start_column_index {
+            Some(start_column_index) => start_column_index,
+            None => return vec![],
+        };
+        let end_row_index = match &grid_range.end_row_index {
+            Some(end_row_index) => end_row_index,
+            None => return vec![],
+        };
+        let end_column_index = match &grid_range.end_column_index {
+            Some(end_column_index) => end_column_index,
+            None => return vec![],
+        };
+        let range_string = format!(
+            "{}!R{}C{}:R{}C{}",
+            sheet_name,
+            start_row_index + 1,
+            start_column_index + 1,
+            end_row_index,
+            end_column_index
+        );
+        
+        range_request = range_request.add_ranges(range_string.as_str());
+        ranges_hashmap.insert(range_string, name.to_string());
+    }
+
+    let range_values = match range_request.doit().await {
+        Ok(range_values) => range_values.1,
+        Err(_) => return vec![]
+    };
+
+    if range_values.value_ranges.is_none() {
+        return vec![]
+    }
+
+    return range_values.value_ranges.unwrap();
+}
 
 pub async fn format_discord_name(context: &Context, member: &Member, discord_name: &str, social_club: &str) {
     // Mo (Mo_v0)

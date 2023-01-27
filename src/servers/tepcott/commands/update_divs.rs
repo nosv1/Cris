@@ -85,85 +85,20 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
 
     let mut ranges_hashmap: HashMap<String, String> = HashMap::new();
 
-    let mut ranges_request = sheets_client
-        .spreadsheets()
-        .values_batch_get(spreadsheet_id)
-        .value_render_option("FORMATTED_VALUE")
-        .major_dimension("COLUMNS");
-    
-    for range in roster_ranges_vec {
-        if range
-            .and_then(|range| range.range.as_ref())
-            .is_none()
-            || range
-                .and_then(|range| range.name.as_ref())
-                .is_none()
-        { 
-            println!("Error: Missing range or name for named range: {:?}", range);  // was there any divisions??
-            return Ok(()); 
-        }
-
-        let grid_range = range.as_ref().unwrap().range.as_ref().unwrap();
-        let name = range.as_ref().unwrap().name.as_ref().unwrap();
-
-        let start_row_index = match grid_range.start_row_index {
-            Some(start_row_index) => start_row_index,
-            None => {
-                println!("Missing start row index for range: {:?}", range);
-                return Ok(());
-            }
-        };
-        let end_row_index = match grid_range.end_row_index {
-            Some(end_row_index) => end_row_index,
-            None => {
-                println!("Missing end row index for range: {:?}", range);
-                return Ok(());
-            }
-        };
-        let start_column_index = match grid_range.start_column_index {
-            Some(start_column_index) => start_column_index,
-            None => {
-                println!("Missing start column index for range: {:?}", range);
-                return Ok(());
-            }
-        };
-        let end_column_index = match grid_range.end_column_index {
-            Some(end_column_index) => end_column_index,
-            None => {
-                println!("Missing end column index for range: {:?}", range);
-                return Ok(());
-            }
-        };
-        let range_string = format!(
-            "{}!R{}C{}:R{}C{}",
-            "roster",
-            start_row_index + 1,
-            start_column_index + 1,
-            end_row_index,
-            end_column_index
-        );
-        ranges_request = ranges_request.add_ranges(&range_string);
-        ranges_hashmap.insert(range_string, name.clone());
-    }
-    
-    let range_values = match ranges_request.doit().await {
-        Ok(range_values) => range_values.1,
-        Err(e) => {
-            println!("Error getting values for sheets: {:?}", e);
-            return Ok(());
-        }
-    };
-
-    if range_values.value_ranges.is_none() { 
-        println!("Missing value ranges");
-        return Ok(()); 
-    }
+    const SHEET_NAME: &str = "roster";
+    let value_ranges = tepcott::get_range_value_ranges(
+        &sheets_client,
+        spreadsheet_id,
+        "COLUMNS",
+        roster_ranges_vec,
+        SHEET_NAME,
+        &mut ranges_hashmap).await;
 
     let mut roster_divs_values: Vec<String> = vec![];
     let mut roster_discord_ids_values: Vec<String> = vec![];
     let mut roster_social_club_values: Vec<String> = vec![];
 
-    for value_range in range_values.value_ranges.unwrap().iter() {
+    for value_range in value_ranges.iter() {
         if value_range.range.is_none() || value_range.values.is_none() {
             println!("Missing range or values for value range: {:?}", value_range.range);
             return Ok(());
@@ -186,8 +121,7 @@ pub async fn update_division_roles(context: &Context, message: &Message, guild: 
                 return Ok(());
             }
         }
-    }
-    
+    }    
 
     let mut drivers: HashMap<String, usize> = HashMap::new();  // discord_id, division
 

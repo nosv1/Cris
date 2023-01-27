@@ -54,67 +54,18 @@ async fn get_predicted_qualifying_cutoffs() -> Vec<ValueRange> {
     ];
 
     let mut qualifying_ranges_hashmap: HashMap<String, String> = HashMap::new();
-    
-    let mut qualifying_request = sheets_client
-        .spreadsheets()
-        .values_batch_get(spreadsheet_id)
-        .value_render_option("FORMATTED_VALUE")
-        .major_dimension("ROWS");
 
-    for qualifying_range in qualifying_ranges_vec.iter() {
-        if qualifying_range
-            .and_then(|range| range.range.as_ref())
-            .is_none()
-            || qualifying_range
-                .and_then(|range| range.named_range_id.as_ref())
-                .is_none()
-        {
-            continue;
-        }
-        let range = qualifying_range.as_ref().unwrap()
-            .range.as_ref().unwrap();
-        let name = qualifying_range.as_ref().unwrap()
-            .name.as_ref().unwrap();
+    const SHEET_NAME: &str = "qualifying";
+    let value_ranges = tepcott::get_range_value_ranges(
+        &sheets_client, 
+        spreadsheet_id, 
+        "ROWS", 
+        qualifying_ranges_vec, 
+        SHEET_NAME,
+        &mut qualifying_ranges_hashmap
+    ).await;
 
-        let start_row_index = match &range.start_row_index {
-            Some(start_row_index) => start_row_index,
-            None => return vec![],
-        };
-        let start_column_index = match &range.start_column_index {
-            Some(start_column_index) => start_column_index,
-            None => return vec![],
-        };
-        let end_row_index = match &range.end_row_index {
-            Some(end_row_index) => end_row_index,
-            None => return vec![],
-        };
-        let end_column_index = match &range.end_column_index {
-            Some(end_column_index) => end_column_index,
-            None => return vec![],
-        };
-        let range_string = format!(
-            "{}!R{}C{}:R{}C{}",
-            "qualifying",
-            start_row_index + 1,
-            start_column_index + 1,
-            end_row_index,
-            end_column_index
-        );
-        
-        qualifying_request = qualifying_request.add_ranges(range_string.as_str());
-        qualifying_ranges_hashmap.insert(name.to_string(), range_string);
-    }
-    
-    let qualifying_values = match qualifying_request.doit().await {
-        Ok(qualifying_values) => qualifying_values.1,
-        Err(_) => return vec![]
-    };
-
-    if qualifying_values.value_ranges.is_none() {
-        return vec![]
-    }
-    
-    return qualifying_values.value_ranges.unwrap();
+    return value_ranges;
 }
 
 pub async fn display_cutoffs(ctx: &Context, msg: &Message) {

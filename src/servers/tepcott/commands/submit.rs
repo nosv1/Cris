@@ -72,63 +72,17 @@ async fn submit_quali_time(
 
     let mut quali_submission_ranges_hashmap: HashMap<String, String> = HashMap::new();
 
-    let mut quali_submissions_request = sheets_client
-        .spreadsheets()
-        .values_batch_get(spreadsheet_id)
-        .value_render_option("FORMATTED_VALUE")
-        .major_dimension("COLUMNS");
+    const SHEET_NAME: &str = "'quali submissions'";
+    let mut value_ranges = tepcott::get_range_value_ranges(
+        &sheets_client,
+        spreadsheet_id,
+        "COLUMNS",
+        quali_submission_ranges_vec,
+        SHEET_NAME,
+        &mut quali_submission_ranges_hashmap
+    ).await;
 
-    for quali_submission_range in quali_submission_ranges_vec.iter() {
-        if quali_submission_range
-            .and_then(|range| range.range.as_ref())
-            .is_none()
-            || quali_submission_range
-                .and_then(|range| range.name.as_ref())
-                .is_none()
-        {
-            return Ok(false);
-        }
-        let range = quali_submission_range.as_ref().unwrap()
-            .range.as_ref().unwrap();
-        let name = quali_submission_range.as_ref().unwrap()
-            .name.as_ref().unwrap();
-
-        let start_row_index = match &range.start_row_index {
-            Some(start_row_index) => start_row_index,
-            None => return Ok(false),
-        };
-        let start_column_index = match &range.start_column_index {
-            Some(start_column_index) => start_column_index,
-            None => return Ok(false),
-        };
-        let end_row_index = match &range.end_row_index {
-            Some(end_row_index) => end_row_index,
-            None => return Ok(false),
-        };
-        let end_column_index = match &range.end_column_index {
-            Some(end_column_index) => end_column_index,
-            None => return Ok(false),
-        };
-        let range_string = format!(
-            "{}!R{}C{}:R{}C{}",
-            "'quali submissions'",
-            start_row_index + 1,
-            start_column_index + 1,
-            end_row_index,
-            end_column_index
-        );
-        quali_submissions_request = quali_submissions_request.add_ranges(&range_string);
-        quali_submission_ranges_hashmap.insert(range_string, name.clone());
-    }
-
-    let mut quali_submissions_values = match quali_submissions_request.doit().await {
-        Ok(quali_submissions_request) => quali_submissions_request.1,
-        Err(e) => Err(e)?,
-    };
-
-    if quali_submissions_values.value_ranges.is_none() { return Ok(false); }
-
-    for value_range in quali_submissions_values.value_ranges.as_mut().unwrap().iter_mut() {
+    for value_range in value_ranges.iter_mut() {
         if value_range.range.is_none() || value_range.values.is_none() {
             return Ok(false);
         }
@@ -157,7 +111,7 @@ async fn submit_quali_time(
 
     sheets_client.spreadsheets().values_batch_update(
         BatchUpdateValuesRequest {
-            data: quali_submissions_values.value_ranges,
+            data: Some(value_ranges),
             include_values_in_response: Some(false),
             response_date_time_render_option: Some("FORMATTED_STRING".to_string()),
             response_value_render_option: Some("FORMATTED_VALUE".to_string()),
