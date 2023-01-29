@@ -1,4 +1,3 @@
-
 from Bot import Bot
 
 import discord
@@ -8,9 +7,11 @@ from src.servers.tepcott.spreadsheet import Spreadsheet
 from src.servers.tepcott.tepcott import (
     DIVISION_CHANNELS_IDS,
     DIVISION_ROLE_IDS,
-    format_discord_name)
+    format_discord_name,
+)
 
 from typing import Optional
+
 
 async def update_division_roles(ctx: discord.ApplicationContext) -> None:
     """ """
@@ -20,8 +21,12 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
 
     division_roles: list[Role] = [None] * len(DIVISION_ROLE_IDS)
     division_channels: list[discord.TextChannel] = [None] * len(DIVISION_ROLE_IDS)
-    promotions_by_division: list[list[Optional[Member]]] = [[] for _ in range(len(DIVISION_ROLE_IDS))]
-    demotions_by_division: list[list[Optional[Member]]] = [[] for _ in range(len(DIVISION_ROLE_IDS))]
+    promotions_by_division: list[list[Optional[Member]]] = [
+        [] for _ in range(len(DIVISION_ROLE_IDS))
+    ]
+    demotions_by_division: list[list[Optional[Member]]] = [
+        [] for _ in range(len(DIVISION_ROLE_IDS))
+    ]
     # [0] is not used because division 0 is not a thing
 
     for role in ctx.guild.roles:
@@ -32,7 +37,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         if channel.id in DIVISION_CHANNELS_IDS:
             division_channels[DIVISION_CHANNELS_IDS.index(channel.id)] = channel
 
-    for driver in drivers.values():      
+    for driver in drivers.values():
         # looping spreadsheet drivers
         # if driver in a division, update their name
 
@@ -48,14 +53,17 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         except discord.errors.NotFound:
             if driver_in_division:
                 await ctx.channel.send(
-                    content=f"Driver {driver.social_club_name} does not exist in the guild anymore", ephemeral=True)
+                    content=f"Driver {driver.social_club_name} does not exist in the guild anymore",
+                    ephemeral=True,
+                )
             continue
 
         if driver_in_division:
             await format_discord_name(
                 member=driver_member,
                 discord_name=driver_member.display_name,
-                social_club_name=driver.social_club_name)
+                social_club_name=driver.social_club_name,
+            )
 
         for role in driver_member.roles:
             if role not in division_roles:
@@ -64,8 +72,9 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
             division_index = division_roles.index(role)
 
             incorrect_division_role = (
-                not driver_in_division 
-                or role.id != DIVISION_ROLE_IDS[int(driver.division)])
+                not driver_in_division
+                or role.id != DIVISION_ROLE_IDS[int(driver.division)]
+            )
 
             if incorrect_division_role:
                 await driver_member.remove_roles(role)
@@ -94,28 +103,27 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
             continue
 
         promotion_message = f"**{division_welcome_messages[div]}**\n"
-        
-        promotion_message += "\n".join([
-            f" - {member.mention}" 
-            for member 
-            in promotions_by_division[div]])
-        demotion_message += "\n".join([
-            f" - {member.mention}"
-            for member
-            in demotions_by_division[div]])
+
+        promotion_message += "\n".join(
+            [f" - {member.mention}" for member in promotions_by_division[div]]
+        )
+        # demotion_message += "\n".join(
+        #     [f" - {member.mention}" for member in demotions_by_division[div]]
+        # )
 
         if promotions_by_division[div] != []:
             await channel.send(promotion_message)
-        if demotions_by_division[div] != []:
-            await channel.send(demotion_message)
+        # if demotions_by_division[div] != []:
+        #     await channel.send(demotion_message)
 
-async def updatedivs(
-    ctx: discord.ApplicationContext, bot: Bot) -> None:
+
+async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
     """ """
 
     if not ctx.author.guild_permissions.administrator:
         await ctx.send(
-            content="You do not have permission to use this command", ephemeral=True)
+            content="You do not have permission to use this command", ephemeral=True
+        )
         return
 
     class ConfirmButton(discord.ui.Button):
@@ -126,11 +134,12 @@ async def updatedivs(
             self.ctx = ctx
 
         async def callback(self, interaction: discord.Interaction):
-            await interaction.response.edit_message(content="Updating division roles...", view=None)
+            await interaction.response.edit_message(
+                content="Updating division roles...", view=None
+            )
             await update_division_roles(self.ctx)
             await interaction.response.edit_message(content="Updated division roles")
 
-            
     class CancelButton(discord.ui.Button):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
@@ -140,14 +149,15 @@ async def updatedivs(
         async def callback(self, interaction: discord.Interaction):
             self.view.disable_all_items()
             await interaction.response.edit_message(content="Cancelled", view=None)
-    
+
     view = discord.ui.View()
     view.add_item(ConfirmButton(ctx, label="Yes", style=discord.ButtonStyle.green))
     view.add_item(CancelButton(label="No", style=discord.ButtonStyle.red))
     await ctx.send_response(
         f"Update division roles for **Round {Spreadsheet().round_number}**?",
-        view=view, 
-        ephemeral=True)
+        view=view,
+        ephemeral=True,
+    )
 
     # view: InitialView = InitialView(bot=bot)
 
