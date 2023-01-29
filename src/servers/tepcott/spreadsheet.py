@@ -64,6 +64,23 @@ class Spreadsheet:
             sheet_name=MY_SHEET_NAME)
 
         self._round_number = int(value_ranges[0][0][0])
+
+    @property
+    def bottom_division_number(self) -> int:
+        """ """
+        if not self._bottom_division_number:
+            self.set_bottom_division_number()
+
+        return self._bottom_division_number
+
+    def set_bottom_division_number(self) -> None:
+        """ """
+
+        value_ranges = self.get_single_column_value_ranges(
+            ranges=[MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE], 
+            sheet_name=MY_SHEET_NAME)
+
+        self._bottom_division_number = int(value_ranges[0][0][0])
         
     def get_single_column_value_ranges(
         self,
@@ -124,6 +141,12 @@ class Spreadsheet:
         self._bottom_division_number: int = int(starting_order_ranges_value_ranges[
             self._starting_order_range_column_indexes.index(
                 MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE)][0][0])
+
+    def get_starting_order(self, division_number: int) -> list[SpreadsheetDriver]:
+        """ """
+
+        division_starting_order = self.get_starting_orders(round_number=self.round_number)[division_number]
+        return division_starting_order
 
     def set_reserves(self, round_number: int, drivers: list[SpreadsheetDriver]) -> None:
         """ """
@@ -227,9 +250,9 @@ class Spreadsheet:
             ranges=starting_order_column_indexes)
         
         starting_order_drivers: list[str] = starting_order_value_ranges[
-            starting_order_column_indexes.index(STARTING_ORDER_DRIVERS_RANGE)][0]
+            starting_order_column_indexes.index(STARTING_ORDER_DRIVERS_RANGE)]
         starting_order_reserves: list[str] = starting_order_value_ranges[
-            starting_order_column_indexes.index(STARTING_ORDER_RESERVES_RANGE)][0]
+            starting_order_column_indexes.index(STARTING_ORDER_RESERVES_RANGE)]
             
         spreadsheet_drivers = self.get_roster_drivers()
 
@@ -237,8 +260,9 @@ class Spreadsheet:
         # [0] intentionally left blank for indexing to match division number
 
         for i, driver_value in enumerate(starting_order_drivers):
-            if driver_value == "":
+            if driver_value == [""]:
                 continue
+            driver_value = driver_value[0]
 
             division_number: int = (i // self._round_tab_division_offset) + 1
             if division_number > self._bottom_division_number:
@@ -248,7 +272,7 @@ class Spreadsheet:
 
             if len(starting_order_reserves) > i:
                 reserve = SpreadsheetDriver(
-                    social_club_name=starting_order_reserves[i],)
+                    social_club_name=starting_order_reserves[i][0],)
                 driver.reserve = reserve
 
             if division_number >= len(starting_orders):

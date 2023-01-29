@@ -3,6 +3,9 @@
 - [x] Automatically update division roles upon command. `!updatedivs`
     - [x] Also updates discord names to be `social_club (discord)`
 - [x] Display the predicted qualifying cutoffs for each division. `!cutoffs`
+- [ ] Convert everything to python for the sake of slash commands
+- [ ] Add slash command for reserves. `/reserves`
+- [x] Add slash command for starting orders. `/starting order`
 
 ## Libraries and Tools Used
 - [ChatGPT](https://openai.com/blog/chatgpt/): An AI model for natural language processing and text generation.
