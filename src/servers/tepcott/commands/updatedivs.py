@@ -79,6 +79,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
             print(f"Added {correct_division_role.name} to {driver_member.display_name}")
             promotions_by_division[division_index].append(driver_member)
 
+    # TODO: HEY YOU THIS SHOULD ONLY BE HERE FOR PRE-ROUND 1, IT SHOULD CHANGE AFTER
     division_welcome_messages = [
         "",  # 0
         "Division 1, the ultimate test of will and determination. Welcome, my fellow epsilonsist - KIFFLOM!",
@@ -111,6 +112,11 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
 async def updatedivs(
     ctx: discord.ApplicationContext, bot: Bot) -> None:
     """ """
+
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.send(
+            content="You do not have permission to use this command", ephemeral=True)
+        return
 
     class ConfirmButton(discord.ui.Button):
         def __init__(self, ctx: discord.ApplicationContext, **kwargs):
