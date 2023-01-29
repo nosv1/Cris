@@ -9,6 +9,9 @@ from src.servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
 from src.servers.tepcott.commands import updatedivs as tepcott_updatedivs
 from src.servers.tepcott.commands import startingorder as tepcott_startingorder
 
+from dotenv import load_dotenv
+load_dotenv()
+
 bot: Bot = Bot(
     debug=os.getenv("DEBUG").lower() == "true")
 
