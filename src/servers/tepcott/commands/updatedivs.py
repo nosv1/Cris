@@ -77,16 +77,49 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
             )
 
             if incorrect_division_role:
-                await driver_member.remove_roles(role)
-                print(f"Removed {role.name} from {driver_member.display_name}")
                 demotions_by_division[division_index].append(driver_member)
+                try:
+                    await driver_member.remove_roles(role)
+                    print(f"Removed {role.name} from {driver_member.display_name}")
 
-        if driver_in_division:
-            division_index = int(driver.division)
-            correct_division_role = division_roles[division_index]
-            await driver_member.add_roles(correct_division_role)
-            print(f"Added {correct_division_role.name} to {driver_member.display_name}")
+                except discord.errors.Forbidden:
+                    await ctx.channel.send(
+                        content=f"Not enough permissions to remove {role.name} from {driver_member.display_name}",
+                        ephemeral=True,
+                    )
+                    continue
+
+                except discord.errors.HTTPException:
+                    await ctx.channel.send(
+                        content=f"HTTPException when removing {role.name} from {driver_member.display_name}",
+                        ephemeral=True,
+                    )
+                    continue
+
+        division_index = int(driver.division)
+        correct_division_role = division_roles[division_index]
+        does_not_have_correct_role = correct_division_role not in driver_member.roles
+        if driver_in_division and does_not_have_correct_role:
             promotions_by_division[division_index].append(driver_member)
+            try:
+                await driver_member.add_roles(correct_division_role)
+                print(
+                    f"Added {correct_division_role.name} to {driver_member.display_name}"
+                )
+
+            except discord.errors.Forbidden:
+                await ctx.channel.send(
+                    content=f"Not enough permissions to add {correct_division_role.name} to {driver_member.display_name}",
+                    ephemeral=True,
+                )
+                continue
+
+            except discord.errors.HTTPException:
+                await ctx.channel.send(
+                    content=f"HTTPException when adding {correct_division_role.name} to {driver_member.display_name}",
+                    ephemeral=True,
+                )
+                continue
 
     # TODO: HEY YOU THIS SHOULD ONLY BE HERE FOR PRE-ROUND 1, IT SHOULD CHANGE AFTER
     division_welcome_messages = [
