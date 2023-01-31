@@ -3,8 +3,8 @@ from Bot import Bot
 import discord
 from discord import Member, Message, Role
 
-from src.servers.tepcott.spreadsheet import Spreadsheet
-from src.servers.tepcott.tepcott import (
+from servers.tepcott.spreadsheet import Spreadsheet
+from servers.tepcott.tepcott import (
     DIVISION_CHANNELS_IDS,
     DIVISION_ROLE_IDS,
     RACER_ROLE_ID,

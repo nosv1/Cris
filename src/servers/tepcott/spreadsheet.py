@@ -3,7 +3,7 @@ from __future__ import annotations
 import gspread as gs
 from typing import Optional
 
-from src.servers.tepcott.tepcott import (
+from servers.tepcott.tepcott import (
     MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE,
     MY_SHEET_NAME,
     MY_SHEET_ROUND_NUMBER_NAMED_RANGE,
@@ -18,12 +18,14 @@ from src.servers.tepcott.tepcott import (
     ROSTER_DRIVERS_NAMED_RANGE,
     ROSTER_SHEET_NAME,
     SERVICE_ACCOUNT_KEY,
-    SPREADSHEET_KEY)
+    SPREADSHEET_KEY,
+)
+
 
 class Spreadsheet:
     def __init__(self) -> None:
         """ """
-    
+
         self._gs = gs.service_account(filename=SERVICE_ACCOUNT_KEY)
         self._spreadsheet = self._gs.open_by_key(SPREADSHEET_KEY)
 
@@ -32,14 +34,16 @@ class Spreadsheet:
             ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE,
             ROSTER_DISCORD_IDS_NAMED_RANGE,
             ROSTER_DIVS_NAMED_RANGE,
-            ROSTER_STATUS_NAMED_RANGE]
+            ROSTER_STATUS_NAMED_RANGE,
+        ]
 
         self._starting_order_range_column_indexes = [
             MY_SHEET_ROUND_TAB_DIVISION_OFFSET,
             MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE,
             MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE,
-            MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE]
-        
+            MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE,
+        ]
+
         # these are just the A1:A notiation, not the full range used in requests
         self._starting_order_drivers_range: Optional[str] = None
         self._starting_order_reserves_range: Optional[str] = None
@@ -60,8 +64,8 @@ class Spreadsheet:
         """ """
 
         value_ranges = self.get_single_column_value_ranges(
-            ranges=[MY_SHEET_ROUND_NUMBER_NAMED_RANGE], 
-            sheet_name=MY_SHEET_NAME)
+            ranges=[MY_SHEET_ROUND_NUMBER_NAMED_RANGE], sheet_name=MY_SHEET_NAME
+        )
 
         self._round_number = int(value_ranges[0][0][0])
 
@@ -77,18 +81,19 @@ class Spreadsheet:
         """ """
 
         value_ranges = self.get_single_column_value_ranges(
-            ranges=[MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE], 
-            sheet_name=MY_SHEET_NAME)
+            ranges=[MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE], sheet_name=MY_SHEET_NAME
+        )
 
         self._bottom_division_number = int(value_ranges[0][0][0])
-        
+
     def get_single_column_value_ranges(
         self,
-        ranges: list[str], 
+        ranges: list[str],
         sheet_name: Optional[str] = None,
         sheet: Optional[gs.worksheet.Worksheet] = None,
-        value_render_option="FORMATTED_VALUE") -> list[gs.worksheet.ValueRange]:
-        """ A sheet or sheet name must be provided """
+        value_render_option="FORMATTED_VALUE",
+    ) -> list[gs.worksheet.ValueRange]:
+        """A sheet or sheet name must be provided"""
 
         sheet_provided: bool = sheet is not None
         sheet_name_provided: bool = sheet_name is not None
@@ -101,9 +106,8 @@ class Spreadsheet:
             sheet = spreadsheet.worksheet(sheet_name)
 
         value_ranges: list[gs.worksheet.ValueRange] = sheet.batch_get(
-            ranges, 
-            major_dimension="ROWS", 
-            value_render_option=value_render_option)
+            ranges, major_dimension="ROWS", value_render_option=value_render_option
+        )
 
         max_row_count: int = max([len(vr) for vr in value_ranges])
         for value_range in value_ranges:
@@ -122,141 +126,208 @@ class Spreadsheet:
     def set_round_tab_ranges(self) -> None:
         """ """
 
-        my_sheet_sheet = self._spreadsheet.worksheet(
-            MY_SHEET_NAME)
+        my_sheet_sheet = self._spreadsheet.worksheet(MY_SHEET_NAME)
 
         starting_order_ranges_value_ranges = self.get_single_column_value_ranges(
-            sheet=my_sheet_sheet,
-            ranges=self._starting_order_range_column_indexes)
+            sheet=my_sheet_sheet, ranges=self._starting_order_range_column_indexes
+        )
 
         self._starting_order_drivers_range: str = starting_order_ranges_value_ranges[
             self._starting_order_range_column_indexes.index(
-                MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE)][0][0]
+                MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE
+            )
+        ][0][0]
         self._starting_order_reserves_range: str = starting_order_ranges_value_ranges[
             self._starting_order_range_column_indexes.index(
-                MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE)][0][0]
-        self._round_tab_division_offset: int = int(starting_order_ranges_value_ranges[
-            self._starting_order_range_column_indexes.index(
-                MY_SHEET_ROUND_TAB_DIVISION_OFFSET)][0][0])
-        self._bottom_division_number: int = int(starting_order_ranges_value_ranges[
-            self._starting_order_range_column_indexes.index(
-                MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE)][0][0])
+                MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE
+            )
+        ][0][0]
+        self._round_tab_division_offset: int = int(
+            starting_order_ranges_value_ranges[
+                self._starting_order_range_column_indexes.index(
+                    MY_SHEET_ROUND_TAB_DIVISION_OFFSET
+                )
+            ][0][0]
+        )
+        self._bottom_division_number: int = int(
+            starting_order_ranges_value_ranges[
+                self._starting_order_range_column_indexes.index(
+                    MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE
+                )
+            ][0][0]
+        )
 
     def get_starting_order(self, division_number: int) -> list[SpreadsheetDriver]:
         """ """
 
-        division_starting_order = self.get_starting_orders(round_number=self.round_number)[division_number]
+        division_starting_order = self.get_starting_orders(
+            round_number=self.round_number
+        )[division_number]
         return division_starting_order
 
     def set_reserves(self, round_number: int, drivers: list[SpreadsheetDriver]) -> None:
         """ """
-        
-        round_sheet = self._spreadsheet.worksheet(
-            f"{ROUND_TAB_PREFIX}{round_number}")
 
-        if (self._starting_order_drivers_range is None 
-            or self._starting_order_reserves_range is None):
+        round_sheet = self._spreadsheet.worksheet(f"{ROUND_TAB_PREFIX}{round_number}")
+
+        if (
+            self._starting_order_drivers_range is None
+            or self._starting_order_reserves_range is None
+        ):
             self.set_round_tab_ranges()
-        
-        STARTING_ORDER_DRIVERS_RANGE = f"{self._starting_order_drivers_range}{round_sheet.row_count}"
-        STARTING_ORDER_RESERVES_RANGE = f"{self._starting_order_reserves_range}{round_sheet.row_count}"
+
+        STARTING_ORDER_DRIVERS_RANGE = (
+            f"{self._starting_order_drivers_range}{round_sheet.row_count}"
+        )
+        STARTING_ORDER_RESERVES_RANGE = (
+            f"{self._starting_order_reserves_range}{round_sheet.row_count}"
+        )
 
         starting_order_column_indexes = [
             STARTING_ORDER_DRIVERS_RANGE,
-            STARTING_ORDER_RESERVES_RANGE]
+            STARTING_ORDER_RESERVES_RANGE,
+        ]
 
         starting_order_value_ranges = self.get_single_column_value_ranges(
-            sheet=round_sheet,
-            ranges=starting_order_column_indexes)
+            sheet=round_sheet, ranges=starting_order_column_indexes
+        )
 
         driver_column_index = starting_order_column_indexes.index(
-            STARTING_ORDER_DRIVERS_RANGE)
+            STARTING_ORDER_DRIVERS_RANGE
+        )
         reserve_column_index = starting_order_column_indexes.index(
-            STARTING_ORDER_RESERVES_RANGE)
+            STARTING_ORDER_RESERVES_RANGE
+        )
 
-        for i, driver_value in enumerate(starting_order_value_ranges[driver_column_index][0]):
+        for i, driver_value in enumerate(
+            starting_order_value_ranges[driver_column_index][0]
+        ):
             for driver in drivers:
                 if driver_value != driver.social_club_name:
                     continue
-                starting_order_value_ranges[reserve_column_index][0][i] = driver.reserve.social_club_name
+                starting_order_value_ranges[reserve_column_index][0][
+                    i
+                ] = driver.reserve.social_club_name
 
-        round_sheet.batch_update([{
-            "range": starting_order_column_indexes[reserve_column_index],
-            "values": starting_order_value_ranges[reserve_column_index]}],
-            value_input_option="USER_ENTERED")
+        round_sheet.batch_update(
+            [
+                {
+                    "range": starting_order_column_indexes[reserve_column_index],
+                    "values": starting_order_value_ranges[reserve_column_index],
+                }
+            ],
+            value_input_option="USER_ENTERED",
+        )
 
     def get_roster_drivers(self) -> dict[str, SpreadsheetDriver]:
         """ """
 
-        roster_value_ranges: list[gs.worksheet.ValueRange] = self.get_single_column_value_ranges(
-            sheet_name=ROSTER_SHEET_NAME, ranges=self._roster_column_indexes)
+        roster_value_ranges: list[
+            gs.worksheet.ValueRange
+        ] = self.get_single_column_value_ranges(
+            sheet_name=ROSTER_SHEET_NAME, ranges=self._roster_column_indexes
+        )
 
-        roster_drivers: list[str] = list(map(
-            lambda x: x[0], 
-            roster_value_ranges[self._roster_column_indexes.index(ROSTER_DRIVERS_NAMED_RANGE)]))
-        roster_social_club_links: list[str] = list(map(
-            lambda x: x[0], 
-            roster_value_ranges[self._roster_column_indexes.index(ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE)]))
-        roster_discord_ids: list[str] = list(map(
-            lambda x: x[0], 
-            roster_value_ranges[self._roster_column_indexes.index(ROSTER_DISCORD_IDS_NAMED_RANGE)]))
-        roster_divs: list[str] = list(map(
-            lambda x: x[0], 
-            roster_value_ranges[self._roster_column_indexes.index(ROSTER_DIVS_NAMED_RANGE)]))
-        roster_status: list[str] = list(map(
-            lambda x: x[0], 
-            roster_value_ranges[self._roster_column_indexes.index(ROSTER_STATUS_NAMED_RANGE)]))
+        roster_drivers: list[str] = list(
+            map(
+                lambda x: x[0],
+                roster_value_ranges[
+                    self._roster_column_indexes.index(ROSTER_DRIVERS_NAMED_RANGE)
+                ],
+            )
+        )
+        roster_social_club_links: list[str] = list(
+            map(
+                lambda x: x[0],
+                roster_value_ranges[
+                    self._roster_column_indexes.index(
+                        ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE
+                    )
+                ],
+            )
+        )
+        roster_discord_ids: list[str] = list(
+            map(
+                lambda x: x[0],
+                roster_value_ranges[
+                    self._roster_column_indexes.index(ROSTER_DISCORD_IDS_NAMED_RANGE)
+                ],
+            )
+        )
+        roster_divs: list[str] = list(
+            map(
+                lambda x: x[0],
+                roster_value_ranges[
+                    self._roster_column_indexes.index(ROSTER_DIVS_NAMED_RANGE)
+                ],
+            )
+        )
+        roster_status: list[str] = list(
+            map(
+                lambda x: x[0],
+                roster_value_ranges[
+                    self._roster_column_indexes.index(ROSTER_STATUS_NAMED_RANGE)
+                ],
+            )
+        )
 
         drivers: dict[str, SpreadsheetDriver] = {}
-        for (
-            driver, 
-            social_club_link,
-            discord_id,
-            division_number,
-            status) in zip(
-                roster_drivers,
-                roster_social_club_links,
-                roster_discord_ids,
-                roster_divs,
-                roster_status):
+        for (driver, social_club_link, discord_id, division_number, status) in zip(
+            roster_drivers,
+            roster_social_club_links,
+            roster_discord_ids,
+            roster_divs,
+            roster_status,
+        ):
             driver = SpreadsheetDriver(
                 social_club_name=driver,
                 discord_id=int(discord_id),
                 division=division_number,
-                status=status)
+                status=status,
+            )
             drivers[driver.social_club_name] = driver
 
         return drivers
-        
+
     def get_starting_orders(self, round_number: int) -> list[list[SpreadsheetDriver]]:
         """ """
-        
-        round_sheet = self._spreadsheet.worksheet(
-            f"{ROUND_TAB_PREFIX}{round_number}")
 
-        if (self._starting_order_drivers_range is None 
-            or self._starting_order_reserves_range is None):
+        round_sheet = self._spreadsheet.worksheet(f"{ROUND_TAB_PREFIX}{round_number}")
+
+        if (
+            self._starting_order_drivers_range is None
+            or self._starting_order_reserves_range is None
+        ):
             self.set_round_tab_ranges()
-        
-        STARTING_ORDER_DRIVERS_RANGE = f"{self._starting_order_drivers_range}{round_sheet.row_count}"
-        STARTING_ORDER_RESERVES_RANGE = f"{self._starting_order_reserves_range}{round_sheet.row_count}"
+
+        STARTING_ORDER_DRIVERS_RANGE = (
+            f"{self._starting_order_drivers_range}{round_sheet.row_count}"
+        )
+        STARTING_ORDER_RESERVES_RANGE = (
+            f"{self._starting_order_reserves_range}{round_sheet.row_count}"
+        )
 
         starting_order_column_indexes = [
             STARTING_ORDER_DRIVERS_RANGE,
-            STARTING_ORDER_RESERVES_RANGE]
+            STARTING_ORDER_RESERVES_RANGE,
+        ]
 
         starting_order_value_ranges = self.get_single_column_value_ranges(
-            sheet=round_sheet,
-            ranges=starting_order_column_indexes)
-        
+            sheet=round_sheet, ranges=starting_order_column_indexes
+        )
+
         starting_order_drivers: list[str] = starting_order_value_ranges[
-            starting_order_column_indexes.index(STARTING_ORDER_DRIVERS_RANGE)]
+            starting_order_column_indexes.index(STARTING_ORDER_DRIVERS_RANGE)
+        ]
         starting_order_reserves: list[str] = starting_order_value_ranges[
-            starting_order_column_indexes.index(STARTING_ORDER_RESERVES_RANGE)]
-            
+            starting_order_column_indexes.index(STARTING_ORDER_RESERVES_RANGE)
+        ]
+
         spreadsheet_drivers = self.get_roster_drivers()
 
-        starting_orders: list[list[SpreadsheetDriver]] = [[],]
+        starting_orders: list[list[SpreadsheetDriver]] = [
+            [],
+        ]
         # [0] intentionally left blank for indexing to match division number
 
         for i, driver_value in enumerate(starting_order_drivers):
@@ -272,7 +343,8 @@ class Spreadsheet:
 
             if len(starting_order_reserves) > i:
                 reserve = SpreadsheetDriver(
-                    social_club_name=starting_order_reserves[i][0],)
+                    social_club_name=starting_order_reserves[i][0],
+                )
                 driver.reserve = reserve
 
             if division_number >= len(starting_orders):
@@ -285,12 +357,13 @@ class Spreadsheet:
 
 class SpreadsheetDriver:
     def __init__(
-        self, 
+        self,
         social_club_name: str,
-        discord_id: Optional[int] = None, 
+        discord_id: Optional[int] = None,
         division: str = "N/A",
         status: str = "Racing",
-        reserve: Optional[SpreadsheetDriver] = None) -> None:
+        reserve: Optional[SpreadsheetDriver] = None,
+    ) -> None:
         """ """
 
         self.social_club_name = social_club_name

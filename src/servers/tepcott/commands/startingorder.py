@@ -1,7 +1,7 @@
 from Bot import Bot
 import discord
 
-from src.servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
+from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 
 
 async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:

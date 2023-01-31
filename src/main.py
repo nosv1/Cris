@@ -1,13 +1,13 @@
 from Bot import Bot
 import discord
 import os
-import src.event_handlers.on_ready as eh_on_ready
+import event_handlers.on_ready as eh_on_ready
 
-from src.servers.phyner.phyner import GUILD_ID as phyner_guild_id
-from src.servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
-# from src.servers.tepcott.commands import reserve as tepcott_reserve
-from src.servers.tepcott.commands import updatedivs as tepcott_updatedivs
-from src.servers.tepcott.commands import startingorder as tepcott_startingorder
+from servers.phyner.phyner import GUILD_ID as phyner_guild_id
+from servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
+# from servers.tepcott.commands import reserve as tepcott_reserve
+from servers.tepcott.commands import updatedivs as tepcott_updatedivs
+from servers.tepcott.commands import startingorder as tepcott_startingorder
 
 from dotenv import load_dotenv
 load_dotenv()
