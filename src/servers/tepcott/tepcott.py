@@ -11,7 +11,8 @@ DIVISION_CHANNELS_IDS: list[int] = [
     702244753038770207,
     702245227888640091,
     796751429636980746,
-    796751528861237258,]
+    796751528861237258,
+]
 DIVISION_ROLE_IDS: list[int] = [
     0,
     702192471316103235,
@@ -19,35 +20,41 @@ DIVISION_ROLE_IDS: list[int] = [
     702192563582402650,
     702192590560428173,
     702192621891747981,
-    702192638341939240,]
+    702192638341939240,
+]
+RACER_ROLE_ID = 450401326472495105
 
 #########   SPREADSHEET INFO   #########
 
-SERVICE_ACCOUNT_KEY: str = "src/servers/tepcott/google_api/tepcott.json";
-SPREADSHEET_KEY: str = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU"           # season 7
-ROUND_TAB_PREFIX: str = "r"
+SERVICE_ACCOUNT_KEY = "src/servers/tepcott/google_api/tepcott.json"
+SPREADSHEET_KEY = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU"  # season 7
+ROUND_TAB_PREFIX = "r"
 
-MY_SHEET_NAME: str = "my sheet"
-ROSTER_SHEET_NAME: str = "roster"
+MY_SHEET_NAME = "my sheet"
+ROSTER_SHEET_NAME = "roster"
 
-ROSTER_DRIVERS_NAMED_RANGE: str = "roster_drivers"
-ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE: str = "roster_sc_links"
-ROSTER_DISCORD_IDS_NAMED_RANGE: str = "roster_discord_ids"
-ROSTER_DIVS_NAMED_RANGE: str = "roster_divs"
-ROSTER_STATUS_NAMED_RANGE: str = "roster_statuses"
+ROSTER_DRIVERS_NAMED_RANGE = "roster_drivers"
+ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE = "roster_sc_links"
+ROSTER_DISCORD_IDS_NAMED_RANGE = "roster_discord_ids"
+ROSTER_DIVS_NAMED_RANGE = "roster_divs"
+ROSTER_STATUS_NAMED_RANGE = "roster_statuses"
 
-MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE: str = "my_sheet_bottom_division"
-MY_SHEET_ROUND_NUMBER_NAMED_RANGE: str = "my_sheet_round_number"
-MY_SHEET_ROUND_TAB_DIVISION_OFFSET: str = "my_sheet_round_tab_division_offset"
-MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE: str = "my_sheet_starting_order_drivers_range"
-MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE: str = "my_sheet_starting_order_reserves_range"
+MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE = "my_sheet_bottom_division"
+MY_SHEET_ROUND_NUMBER_NAMED_RANGE = "my_sheet_round_number"
+MY_SHEET_ROUND_TAB_DIVISION_OFFSET = "my_sheet_round_tab_division_offset"
+MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE = (
+    "my_sheet_starting_order_drivers_range"
+)
+MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE = (
+    "my_sheet_starting_order_reserves_range"
+)
 
 #########   FUNCTIONS   #########
 
+
 async def format_discord_name(
-    member: discord.Member, 
-    discord_name: str, 
-    social_club_name: str) -> None:
+    member: discord.Member, discord_name: str, social_club_name: str
+) -> None:
     """ """
 
     re_pattern = re.compile(r"\(.*\)")

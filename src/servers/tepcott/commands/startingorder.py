@@ -6,6 +6,9 @@ from src.servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 
 async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
     """ """
+    print(
+        f"{ctx.author.display_name} ({ctx.author.id}) from {ctx.guild.name} ({ctx.guild.id}) used ./{ctx.command.name}"
+    )
 
     class NumberButton(discord.ui.Button):
         def __init__(

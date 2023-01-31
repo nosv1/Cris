@@ -1,12 +1,13 @@
 from Bot import Bot
 
 import discord
-from discord import Member, Role
+from discord import Member, Message, Role
 
 from src.servers.tepcott.spreadsheet import Spreadsheet
 from src.servers.tepcott.tepcott import (
     DIVISION_CHANNELS_IDS,
     DIVISION_ROLE_IDS,
+    RACER_ROLE_ID,
     format_discord_name,
 )
 
@@ -19,8 +20,9 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
     spreadsheet = Spreadsheet()
     drivers = spreadsheet.get_roster_drivers()
 
+    racer_role = ctx.guild.get_role(RACER_ROLE_ID)
     division_roles: list[Role] = [None] * len(DIVISION_ROLE_IDS)
-    division_channels: list[discord.TextChannel] = [None] * len(DIVISION_ROLE_IDS)
+    division_channels: list[discord.TextChannel] = [None] * len(DIVISION_CHANNELS_IDS)
     promotions_by_division: list[list[Optional[Member]]] = [
         [] for _ in range(len(DIVISION_ROLE_IDS))
     ]
@@ -33,7 +35,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         if role.id in DIVISION_ROLE_IDS:
             division_roles[DIVISION_ROLE_IDS.index(role.id)] = role
 
-    for channel in ctx.guild.channels:
+    for channel in await ctx.guild.fetch_channels():
         if channel.id in DIVISION_CHANNELS_IDS:
             division_channels[DIVISION_CHANNELS_IDS.index(channel.id)] = channel
 
@@ -87,14 +89,30 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
                         content=f"Not enough permissions to remove {role.name} from {driver_member.display_name}",
                         ephemeral=True,
                     )
-                    continue
 
                 except discord.errors.HTTPException:
                     await ctx.channel.send(
                         content=f"HTTPException when removing {role.name} from {driver_member.display_name}",
                         ephemeral=True,
                     )
-                    continue
+
+        if not driver_in_division:
+            try:
+                await driver_member.remove_roles(racer_role)
+                print(f"Removed {racer_role.name} from {driver_member.display_name}")
+
+            except discord.errors.Forbidden:
+                await ctx.channel.send(
+                    content=f"Not enough permissions to remove {racer_role.name} from {driver_member.display_name}",
+                    ephemeral=True,
+                )
+
+            except discord.errors.HTTPException:
+                await ctx.channel.send(
+                    content=f"HTTPException when removing {racer_role.name} from {driver_member.display_name}",
+                    ephemeral=True,
+                )
+            continue
 
         division_index = int(driver.division)
         correct_division_role = division_roles[division_index]
@@ -136,6 +154,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
             continue
 
         promotion_message = f"**{division_welcome_messages[div]}**\n"
+        # demotion_message = f"**{division_welcome_messages[div]}**\n"
 
         promotion_message += "\n".join(
             [f" - {member.mention}" for member in promotions_by_division[div]]
@@ -152,6 +171,9 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
 
 async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
     """ """
+    print(
+        f"{ctx.author.display_name} ({ctx.author.id}) from {ctx.guild.name} ({ctx.guild.id}) used ./{ctx.command.name}"
+    )
 
     if not ctx.author.guild_permissions.administrator:
         await ctx.send(
@@ -165,13 +187,14 @@ async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
 
             self.view: discord.ui.View
             self.ctx = ctx
+            self.msg: Optional[Message] = None
 
         async def callback(self, interaction: discord.Interaction):
-            await interaction.response.edit_message(
-                content="Updating division roles...", view=None
+            self.msg = await interaction.response.send_message(
+                content="Updating division roles..."
             )
             await update_division_roles(self.ctx)
-            await interaction.response.edit_message(content="Updated division roles")
+            await self.msg.edit(content="Updated division roles")
 
     class CancelButton(discord.ui.Button):
         def __init__(self, **kwargs):
