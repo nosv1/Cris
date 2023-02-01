@@ -40,7 +40,7 @@ tepcott_reserves_command_group = bot.create_group(
 
 @tepcott_reserves_command_group.command(
     name="needed",
-    description="Use this command if a driver needs a reserve.",
+    description="Sets a driver as needing a reserve.",
 )
 @option(
     name="driver",
@@ -58,7 +58,7 @@ async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
 
 @bot.slash_command(
     guild_ids=[tepcott_guild_id],
-    description="Get the starting order for the current round.",
+    description="Gets a division's starting order.",
 )
 async def startingorder(ctx: discord.ApplicationContext):
     """/startingorder"""
@@ -71,7 +71,7 @@ async def startingorder(ctx: discord.ApplicationContext):
 
 @bot.slash_command(
     guild_ids=[tepcott_guild_id],
-    description="Update the division roles and nicknames of all participants based on the spreadsheet",
+    description="Updates the division roles and nicknames of all participants.",
 )
 async def updatedivs(ctx: discord.ApplicationContext):
     """/updatedivs"""
