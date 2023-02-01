@@ -1,54 +1,86 @@
 from Bot import Bot
+
 import discord
-import os
+from discord import option
+
 import event_handlers.on_ready as eh_on_ready
+
+import os
 
 from servers.phyner.phyner import GUILD_ID as phyner_guild_id
 from servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
-# from servers.tepcott.commands import reserve as tepcott_reserve
+
+from servers.tepcott.commands import reserve as tepcott_reserve
 from servers.tepcott.commands import updatedivs as tepcott_updatedivs
 from servers.tepcott.commands import startingorder as tepcott_startingorder
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
-bot: Bot = Bot(
-    debug=os.getenv("DEBUG").lower() == "true")
+bot: Bot = Bot(debug=os.getenv("DEBUG").lower() == "true")
 
 ########################    EVENT HANDLERS    ########################
 
+
 @bot.event
 async def on_ready():
+    """ """
+
     await eh_on_ready.on_ready(bot)
+
 
 ########################    COMMANDS    ########################
 
-# @bot.slash_command(guild_ids=[tepcott_guild_id], description="Assign/unassign a reserve to/from a driver")
-# async def reserve(ctx: discord.ApplicationContext):
-#     """ """
 
-#     if bot.debug and not bot.is_developer(ctx.author):
-#         return
+tepcott_reserves_command_group = bot.create_group(
+    "reserve", "Commands for managing reserves.", guild_ids=[tepcott_guild_id]
+)
 
-#     await tepcott_reserve.reserve(ctx, bot)
 
-@bot.slash_command(guild_ids=[tepcott_guild_id], description="Update the division roles and nicknames of all participants based on the spreadsheet")
+@tepcott_reserves_command_group.command(
+    name="needed",
+    description="Use this command if a driver needs a reserve.",
+)
+@option(
+    name="driver",
+    type=discord.Member,
+    description="The driver who needs a reserve.",
+)
+async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
+    """/reserve needed <@driver>"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_reserve.reserve_needed(ctx, bot, driver)
+
+
+@bot.slash_command(
+    guild_ids=[tepcott_guild_id],
+    description="Get the starting order for the current round.",
+)
+async def startingorder(ctx: discord.ApplicationContext):
+    """/startingorder"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_startingorder.startingorder(ctx, bot)
+
+
+@bot.slash_command(
+    guild_ids=[tepcott_guild_id],
+    description="Update the division roles and nicknames of all participants based on the spreadsheet",
+)
 async def updatedivs(ctx: discord.ApplicationContext):
-    """ """
+    """/updatedivs"""
 
     if bot.debug and not bot.is_developer(ctx.author):
         return
 
     await tepcott_updatedivs.updatedivs(ctx, bot)
 
-@bot.slash_command(guild_ids=[tepcott_guild_id], description="Get the starting order for the current round.")
-async def startingorder(ctx: discord.ApplicationContext):
-    """ """
-
-    if bot.debug and not bot.is_developer(ctx.author):
-        return
-
-    await tepcott_startingorder.startingorder(ctx, bot)
 
 ########################    MAIN    ########################
 

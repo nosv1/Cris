@@ -1,4 +1,5 @@
 import discord
+import os
 import re
 
 #########   DISCORD IDs   #########
@@ -23,10 +24,13 @@ DIVISION_ROLE_IDS: list[int] = [
     702192638341939240,
 ]
 RACER_ROLE_ID = 450401326472495105
+SPREADSHEET_CHANNEL_ID = 894284840520802384
 
 #########   SPREADSHEET INFO   #########
 
-SERVICE_ACCOUNT_KEY = "src/servers/tepcott/google_api/tepcott.json"
+SERVICE_ACCOUNT_KEY = os.path.join(
+    os.path.dirname(__file__), "google_api/tepcott.json"
+).replace("/", os.sep)
 SPREADSHEET_KEY = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU"  # season 7
 ROUND_TAB_PREFIX = "r"
 

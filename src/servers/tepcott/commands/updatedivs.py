@@ -3,7 +3,7 @@ from Bot import Bot
 import discord
 from discord import Member, Message, Role
 
-from servers.tepcott.spreadsheet import Spreadsheet
+from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 from servers.tepcott.tepcott import (
     DIVISION_CHANNELS_IDS,
     DIVISION_ROLE_IDS,
@@ -18,7 +18,8 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
     """ """
 
     spreadsheet = Spreadsheet()
-    drivers = spreadsheet.get_roster_drivers()
+    driver_by_social_club_name: dict[str, SpreadsheetDriver]
+    driver_by_social_club_name, _ = spreadsheet.get_roster_drivers()
 
     racer_role = ctx.guild.get_role(RACER_ROLE_ID)
     division_roles: list[Role] = [None] * len(DIVISION_ROLE_IDS)
@@ -39,7 +40,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         if channel.id in DIVISION_CHANNELS_IDS:
             division_channels[DIVISION_CHANNELS_IDS.index(channel.id)] = channel
 
-    for driver in drivers.values():
+    for driver in driver_by_social_club_name.values():
         # looping spreadsheet drivers
         # if driver in a division, update their name
 

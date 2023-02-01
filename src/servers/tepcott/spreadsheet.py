@@ -166,7 +166,7 @@ class Spreadsheet:
         return division_starting_order
 
     def set_reserves(self, round_number: int, drivers: list[SpreadsheetDriver]) -> None:
-        """ """
+        """`drivers` is a list of drivers that we are updating the reserves for."""
 
         round_sheet = self._spreadsheet.worksheet(f"{ROUND_TAB_PREFIX}{round_number}")
 
@@ -200,13 +200,13 @@ class Spreadsheet:
         )
 
         for i, driver_value in enumerate(
-            starting_order_value_ranges[driver_column_index][0]
+            starting_order_value_ranges[driver_column_index]
         ):
             for driver in drivers:
-                if driver_value != driver.social_club_name:
+                if driver_value[0] != driver.social_club_name:
                     continue
-                starting_order_value_ranges[reserve_column_index][0][
-                    i
+                starting_order_value_ranges[reserve_column_index][i][
+                    0
                 ] = driver.reserve.social_club_name
 
         round_sheet.batch_update(
@@ -219,8 +219,10 @@ class Spreadsheet:
             value_input_option="USER_ENTERED",
         )
 
-    def get_roster_drivers(self) -> dict[str, SpreadsheetDriver]:
-        """ """
+    def get_roster_drivers(
+        self,
+    ) -> tuple[dict[str, SpreadsheetDriver], dict[int, SpreadsheetDriver]]:
+        """returns tuple(dict[social_club_name, SpreadsheetDriver], dict[discord_id, SpreadsheetDriver])"""
 
         roster_value_ranges: list[
             gs.worksheet.ValueRange
@@ -271,7 +273,8 @@ class Spreadsheet:
             )
         )
 
-        drivers: dict[str, SpreadsheetDriver] = {}
+        drivers_by_social_club_name: dict[str, SpreadsheetDriver] = {}
+        drivers_by_discord_id: dict[int, SpreadsheetDriver] = {}
         for (driver, social_club_link, discord_id, division_number, status) in zip(
             roster_drivers,
             roster_social_club_links,
@@ -285,9 +288,10 @@ class Spreadsheet:
                 division=division_number,
                 status=status,
             )
-            drivers[driver.social_club_name] = driver
+            drivers_by_social_club_name[driver.social_club_name] = driver
+            drivers_by_discord_id[driver.discord_id] = driver
 
-        return drivers
+        return drivers_by_social_club_name, drivers_by_discord_id
 
     def get_starting_orders(self, round_number: int) -> list[list[SpreadsheetDriver]]:
         """ """
@@ -323,7 +327,8 @@ class Spreadsheet:
             starting_order_column_indexes.index(STARTING_ORDER_RESERVES_RANGE)
         ]
 
-        spreadsheet_drivers = self.get_roster_drivers()
+        drivers_by_social_club_name: dict[str, SpreadsheetDriver]
+        drivers_by_social_club_name, _ = self.get_roster_drivers()
 
         starting_orders: list[list[SpreadsheetDriver]] = [
             [],
@@ -339,7 +344,7 @@ class Spreadsheet:
             if division_number > self._bottom_division_number:
                 break
 
-            driver = spreadsheet_drivers[driver_value]
+            driver = drivers_by_social_club_name[driver_value]
 
             if len(starting_order_reserves) > i:
                 reserve = SpreadsheetDriver(
