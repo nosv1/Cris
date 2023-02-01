@@ -3,15 +3,18 @@
 - [x] Automatically update division roles upon command. `!updatedivs`
     - [x] Also updates discord names to be `social_club (discord)`
 - [x] Display the predicted qualifying cutoffs for each division. `!cutoffs`
-- [ ] Convert everything to python for the sake of slash commands
-- [ ] Add slash command for reserves. `/reserves`
-- [x] Add slash command for starting orders. `/starting order`
+- [x] Convert "everything" (updatedivs) to python for the sake of slash commands
+- [ ] Add slash commands for reserves. 
+    - [x] `/reserves needed` 
+    - [ ] `/reserve assign`
+    - [ ] `/reserve remove`
+- [x] Add slash command for starting orders. `/startingorder`
 
 ## Libraries and Tools Used
 - [ChatGPT](https://openai.com/blog/chatgpt/): An AI model for natural language processing and text generation.
 - [GitHub Copilot](https://github.com/features/copilot): A tool for helping developers work more efficiently with GitHub.
-- [Serenity](https://docs.rs/serenity/latest/serenity/): A Rust library for building fast and efficient Discord bots.
-- [google_sheets4](https://docs.rs/google-sheets4/latest/google_sheets4/): An API that allows communication and data manipulation with Google Sheets.
+- [Pycord](https://docs.pycord.dev/en/stable/api/index.html): A Python library for Discord.
+- [gspread](https://docs.gspread.org/en/latest/user-guide.html): An API that allows communication and data manipulation with Google Sheets.
 
 ## Notes for Use
 - The project requires a missing `.env` file, which should contain the variable `DISCORD_BOT_TOKEN`.
