@@ -86,6 +86,16 @@ class Spreadsheet:
 
         self._bottom_division_number = int(value_ranges[0][0][0])
 
+    def get_neighboring_division_numbers(self, division_number: int) -> tuple[int]:
+        """ """
+        if division_number == 1:
+            return ((division_number + 1),)
+
+        if division_number == self.bottom_division_number:
+            return ((division_number - 1),)
+
+        return (division_number - 1, division_number + 1)
+
     def get_single_column_value_ranges(
         self,
         ranges: list[str],

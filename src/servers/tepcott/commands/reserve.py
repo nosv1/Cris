@@ -6,6 +6,7 @@ from discord import Message
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 from typing import Optional
 from servers.tepcott.tepcott import (
+    DIVISION_CHANNELS_IDS,
     SPREADSHEET_CHANNEL_ID,
 )
 
@@ -14,6 +15,34 @@ async def handle_reserve_needed(
     ctx: discord.ApplicationContext, driver_member: discord.Member, bot: Bot
 ):
     """ """
+
+    class InformChannelsButton(discord.ui.Button):
+        def __init__(
+            self,
+            ctx: discord.ApplicationContext,
+            bot: Bot,
+            spreadsheet: Spreadsheet,
+            driver: SpreadsheetDriver,
+            **kwargs,
+        ):
+            super().__init__(**kwargs)
+
+            self.view: discord.ui.View
+            self.spreadsheet = spreadsheet
+            self.driver = driver
+
+        async def callback(self, interaction: discord.Interaction):
+            for division_number in self.spreadsheet.get_neighboring_division_numbers(
+                division_number=int(self.driver.division)
+            ):
+                division_channel = await ctx.guild.fetch_channel(
+                    DIVISION_CHANNELS_IDS[division_number]
+                )
+                await division_channel.send(
+                    f"Hello, friends. {interaction.user.display_name} wanted to inform you all, {self.driver.social_club_name}, in Division {self.driver.division}, needs a reserve. Contact a DoubleD if you are interested in reserving - KIFFLOM!."
+                )
+                await interaction.message.edit(view=None)
+                await interaction.response.defer()
 
     class ReserveNeededConfirmButton(discord.ui.Button):
         def __init__(
@@ -39,12 +68,26 @@ async def handle_reserve_needed(
             self.spreadsheet.set_reserves(
                 round_number=self.spreadsheet.round_number, drivers=[self.driver]
             )
-            await interaction.response.send_message(
-                content=f"{self.driver_member.display_name} is now marked as needing a reserve for Round {self.spreadsheet.round_number}.",
-                view=None,
+
+            view = discord.ui.View()
+            view.add_item(
+                InformChannelsButton(
+                    ctx=self.ctx,
+                    bot=self.bot,
+                    spreadsheet=self.spreadsheet,
+                    driver=self.driver,
+                    label="Inform neighboring divisions (no ping)?",
+                    style=discord.ButtonStyle.blurple,
+                )
             )
-            await self.bot.fetch_channel(SPREADSHEET_CHANNEL_ID).send(
-                f"{self.driver_member.display_name} has been marked as needing a reserve Round {self.spreadsheet.round_number}.",
+
+            await interaction.response.send_message(
+                content=f"{self.ctx.author.display_name} marked {self.driver_member.display_name} as needing a reserve for Round {self.spreadsheet.round_number}.",
+                view=view,
+            )
+            spreadsheet_channel = await self.bot.fetch_channel(SPREADSHEET_CHANNEL_ID)
+            await spreadsheet_channel.send(
+                f"{self.ctx.author.display_name} marked {self.driver_member.display_name} as needing a reserve for Round {self.spreadsheet.round_number}."
             )
 
     class ReserveNeededCancelButton(discord.ui.Button):
@@ -131,7 +174,7 @@ async def reserve_needed(
         )
         return
 
-    await handle_reserve_needed(ctx=ctx, driver_member=driver_member)
+    await handle_reserve_needed(ctx=ctx, driver_member=driver_member, bot=bot)
 
 
 # class DriversDropdown(discord.ui.Select):
