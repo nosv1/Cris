@@ -356,11 +356,14 @@ class Spreadsheet:
 
             driver = drivers_by_social_club_name[driver_value]
 
-            if len(starting_order_reserves) > i:
+            reserve_is_driver = starting_order_reserves[i][0] in drivers_by_social_club_name
+            if reserve_is_driver:
+                reserve = drivers_by_social_club_name[starting_order_reserves[i][0]]
+            else:
                 reserve = SpreadsheetDriver(
                     social_club_name=starting_order_reserves[i][0],
                 )
-                driver.reserve = reserve
+            driver.reserve = reserve
 
             if division_number >= len(starting_orders):
                 starting_orders.append([])
@@ -382,6 +385,9 @@ class SpreadsheetDriver:
         """ """
 
         self.social_club_name = social_club_name
+        self.social_club_link = (
+            f"https://socialclub.rockstargames.com/member/{social_club_name}"
+        )
         self.discord_id = discord_id
         self.division = division
         self.status = status

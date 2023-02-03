@@ -51,17 +51,21 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         # if driver should be in a division, add the correct division role
 
         driver_in_division = driver.division.isnumeric()
+        driver_is_reserve = driver.status == "Reserve"
+        driver_in_waiting_list = driver.division == "WL"
         try:
             driver_member = await ctx.guild.fetch_member(driver.discord_id)
         except discord.errors.NotFound:
-            if driver_in_division:
+            if driver_in_division or driver_is_reserve or driver_in_waiting_list:
                 await ctx.channel.send(
                     content=f"Driver {driver.social_club_name} does not exist in the guild anymore",
                     ephemeral=True,
                 )
             continue
 
-        if driver_in_division:
+        driver_has_racer_role = racer_role in driver_member.roles
+
+        if driver_in_division or driver_is_reserve or driver_in_waiting_list:
             await format_discord_name(
                 member=driver_member,
                 discord_name=driver_member.display_name,
@@ -97,10 +101,17 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
                         ephemeral=True,
                     )
 
-        if not driver_in_division:
+        if (
+            not driver_in_division
+            and not driver_is_reserve
+            and not driver_in_waiting_list
+        ):
             try:
-                await driver_member.remove_roles(racer_role)
-                print(f"Removed {racer_role.name} from {driver_member.display_name}")
+                if driver_has_racer_role:
+                    await driver_member.remove_roles(racer_role)
+                    print(
+                        f"Removed {racer_role.name} from {driver_member.display_name}"
+                    )
 
             except discord.errors.Forbidden:
                 await ctx.channel.send(
@@ -113,6 +124,27 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
                     content=f"HTTPException when removing {racer_role.name} from {driver_member.display_name}",
                     ephemeral=True,
                 )
+            continue
+
+        if driver_in_division or driver_is_reserve or driver_in_waiting_list:
+            try:
+                if not driver_has_racer_role:
+                    await driver_member.add_roles(racer_role)
+                    print(f"Added {racer_role.name} to {driver_member.display_name}")
+
+            except discord.errors.Forbidden:
+                await ctx.channel.send(
+                    content=f"Not enough permissions to add {racer_role.name} to {driver_member.display_name}",
+                    ephemeral=True,
+                )
+
+            except discord.errors.HTTPException:
+                await ctx.channel.send(
+                    content=f"HTTPException when removing {racer_role.name} from {driver_member.display_name}",
+                    ephemeral=True,
+                )
+
+        if not driver_in_division:
             continue
 
         division_index = int(driver.division)
@@ -164,8 +196,8 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         #     [f" - {member.mention}" for member in demotions_by_division[div]]
         # )
 
-        if promotions_by_division[div] != []:
-            await channel.send(promotion_message)
+        # if promotions_by_division[div] != []:
+        #     await channel.send(promotion_message)
         # if demotions_by_division[div] != []:
         #     await channel.send(demotion_message)
 
@@ -191,6 +223,7 @@ async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
             self.msg: Optional[Message] = None
 
         async def callback(self, interaction: discord.Interaction):
+            self.view.disable_all_items()
             self.msg = await interaction.response.send_message(
                 content="Updating division roles..."
             )

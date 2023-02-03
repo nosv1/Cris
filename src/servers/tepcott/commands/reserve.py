@@ -7,7 +7,7 @@ from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 from typing import Optional
 from servers.tepcott.tepcott import (
     DIVISION_CHANNELS_IDS,
-    SPREADSHEET_CHANNEL_ID,
+    LATE_JOINERS_AND_RESERVES_CHANNEL_ID,
 )
 
 
@@ -32,6 +32,9 @@ async def handle_reserve_needed(
             self.driver = driver
 
         async def callback(self, interaction: discord.Interaction):
+            await interaction.response.defer()
+            await interaction.message.edit(view=None)
+
             for division_number in self.spreadsheet.get_neighboring_division_numbers(
                 division_number=int(self.driver.division)
             ):
@@ -39,10 +42,8 @@ async def handle_reserve_needed(
                     DIVISION_CHANNELS_IDS[division_number]
                 )
                 await division_channel.send(
-                    f"Hello, friends. {interaction.user.display_name} wanted to inform you all, {self.driver.social_club_name}, in Division {self.driver.division}, needs a reserve. Contact a DoubleD if you are interested in reserving - KIFFLOM!."
+                    f"Hello, friends. {interaction.user.display_name} wanted to inform you all, {self.driver.social_club_name}, in Division {self.driver.division}, needs a reserve. Contact a DoubleD if you are interested in reserving - KIFFLOM!"
                 )
-                await interaction.message.edit(view=None)
-                await interaction.response.defer()
 
     class ReserveNeededConfirmButton(discord.ui.Button):
         def __init__(
@@ -65,6 +66,11 @@ async def handle_reserve_needed(
             self.msg: Optional[Message] = None
 
         async def callback(self, interaction: discord.Interaction):
+            """ """
+            await interaction.response.edit_message(
+                content="Reserve is being set...", view=None
+            )
+
             self.spreadsheet.set_reserves(
                 round_number=self.spreadsheet.round_number, drivers=[self.driver]
             )
@@ -81,13 +87,15 @@ async def handle_reserve_needed(
                 )
             )
 
-            await interaction.response.send_message(
-                content=f"{self.ctx.author.display_name} marked {self.driver_member.display_name} as needing a reserve for Round {self.spreadsheet.round_number}.",
+            await interaction.channel.send(
+                content=f"`{self.ctx.author.display_name}` marked `{self.driver_member.display_name}` as needing a reserve for Round {self.spreadsheet.round_number}.",
                 view=view,
             )
-            spreadsheet_channel = await self.bot.fetch_channel(SPREADSHEET_CHANNEL_ID)
+            spreadsheet_channel = await self.bot.fetch_channel(
+                LATE_JOINERS_AND_RESERVES_CHANNEL_ID
+            )
             await spreadsheet_channel.send(
-                f"{self.ctx.author.display_name} marked {self.driver_member.display_name} as needing a reserve for Round {self.spreadsheet.round_number}."
+                f"`{self.ctx.author.display_name}` marked `{self.driver_member.display_name}` as needing a reserve for Round {self.spreadsheet.round_number}."
             )
 
     class ReserveNeededCancelButton(discord.ui.Button):
@@ -100,15 +108,20 @@ async def handle_reserve_needed(
             self.view.disable_all_items()
             await interaction.response.edit_message(content="Cancelled", view=None)
 
+    interaction = await ctx.send_response(
+        content="Hello, friend. I'm just doing some checks real quick...",
+        ephemeral=True,
+    )
+
     spreadsheet = Spreadsheet()
     _, drivers_by_discord_id = spreadsheet.get_roster_drivers()
     try:
         driver = drivers_by_discord_id[driver_member.id]
     except KeyError:
-        await ctx.respond(
-            content=f"`{driver_member.display_name}` is not on the spreadsheet roster.",
-            ephemeral=True,
+        await interaction.edit_original_response(
+            content=f"`{driver_member.display_name}` is not on the spreadsheet roster."
         )
+        return
     starting_orders = spreadsheet.get_starting_orders(
         round_number=spreadsheet.round_number
     )
@@ -122,11 +135,18 @@ async def handle_reserve_needed(
         d for d in starting_orders[division_number] if d.discord_id == driver.discord_id
     ][0].reserve
 
-    driver_needs_reserve = driver_reserve.social_club_name == "RESERVE NEEDED"
+    driver_needs_reserve = (
+        driver_reserve and driver_reserve.social_club_name == "RESERVE NEEDED"
+    )
+    driver_has_reserve = driver_reserve and driver_reserve.social_club_name != ""
+    if driver_has_reserve:
+        await interaction.edit_original_response(
+            content=f"`{driver_member.display_name}` already has `{driver_reserve.social_club_name}` as a reserve for Round {spreadsheet.round_number}."
+        )
+        return
     if driver_needs_reserve:
-        await ctx.respond(
-            content=f"`{driver_member.display_name}` is already marked as needing a reserve for Round {spreadsheet.round_number}.",
-            ephemeral=True,
+        await interaction.edit_original_response(
+            content=f"`{driver_member.display_name}` is already marked as needing a reserve for Round {spreadsheet.round_number}."
         )
         return
 
@@ -153,10 +173,9 @@ async def handle_reserve_needed(
         )
     )
 
-    await ctx.respond(
+    await interaction.edit_original_response(
         content=f"Are you sure you want to mark `{driver_member.display_name}` as needing a reserve for Round {spreadsheet.round_number}?",
         view=view,
-        ephemeral=True,
     )
 
 
