@@ -58,7 +58,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         except discord.errors.NotFound:
             if driver_in_division or driver_is_reserve or driver_in_waiting_list:
                 await ctx.channel.send(
-                    content=f"Driver {driver.social_club_name} does not exist in the guild anymore",
+                    content=f"{driver.social_club_name} does not exist in the guild anymore",
                     ephemeral=True,
                 )
             continue
@@ -101,11 +101,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
                         ephemeral=True,
                     )
 
-        if (
-            not driver_in_division
-            and not driver_is_reserve
-            and not driver_in_waiting_list
-        ):
+        if not driver_in_division and not driver_in_waiting_list:
             try:
                 if driver_has_racer_role:
                     await driver_member.remove_roles(racer_role)
@@ -126,7 +122,7 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
                 )
             continue
 
-        if driver_in_division or driver_is_reserve or driver_in_waiting_list:
+        if driver_in_division or driver_in_waiting_list:
             try:
                 if not driver_has_racer_role:
                     await driver_member.add_roles(racer_role)
