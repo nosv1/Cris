@@ -14,7 +14,7 @@ from servers.tepcott.tepcott import (
 from typing import Optional
 
 
-async def update_division_roles(ctx: discord.ApplicationContext) -> None:
+async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -> None:
     """ """
 
     spreadsheet = Spreadsheet()
@@ -40,7 +40,12 @@ async def update_division_roles(ctx: discord.ApplicationContext) -> None:
         if channel.id in DIVISION_CHANNELS_IDS:
             division_channels[DIVISION_CHANNELS_IDS.index(channel.id)] = channel
 
-    for driver in driver_by_social_club_name.values():
+    total_drivers = len(driver_by_social_club_name)
+    for i, driver in enumerate(driver_by_social_club_name.values()):
+        if i + 1 % 10 == 0:
+            await msg.edit(
+                content=f"Updating division roles... ({i+1}/{total_drivers})"
+            )
         # looping spreadsheet drivers
         # if driver in a division, update their name
 

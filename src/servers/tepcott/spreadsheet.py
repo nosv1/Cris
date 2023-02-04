@@ -6,10 +6,15 @@ from typing import Optional
 from servers.tepcott.tepcott import (
     MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE,
     MY_SHEET_NAME,
+    MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE,
+    MY_SHEET_RESERVE_REQUESTS_DIVISIONS_NAMED_RANGE,
+    MY_SHEET_RESERVE_REQUESTS_RESERVES_NAMED_RANGE,
+    MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE,
     MY_SHEET_ROUND_NUMBER_NAMED_RANGE,
     MY_SHEET_ROUND_TAB_DIVISION_OFFSET,
     MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE,
     MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE,
+    RESERVE_NEEDED_STRING,
     ROUND_TAB_PREFIX,
     ROSTER_STATUS_NAMED_RANGE,
     ROSTER_DIVS_NAMED_RANGE,
@@ -42,6 +47,13 @@ class Spreadsheet:
             MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE,
             MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE,
             MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE,
+        ]
+
+        self._reserve_requests_range_column_indexes = [
+            MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE,
+            MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE,
+            MY_SHEET_RESERVE_REQUESTS_DIVISIONS_NAMED_RANGE,
+            MY_SHEET_RESERVE_REQUESTS_RESERVES_NAMED_RANGE,
         ]
 
         # these are just the A1:A notiation, not the full range used in requests
@@ -85,6 +97,156 @@ class Spreadsheet:
         )
 
         self._bottom_division_number = int(value_ranges[0][0][0])
+
+    def add_reserve_request(self, discord_id: int) -> None:
+        """ """
+
+        reserve_requests_column_indexes = [
+            MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE,
+            MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE,
+        ]
+
+        value_ranges = self.get_single_column_value_ranges(
+            ranges=reserve_requests_column_indexes, sheet_name=MY_SHEET_NAME
+        )
+
+        value_ranges[0].append([self.round_number])
+        value_ranges[1].append([str(discord_id)])
+
+        my_sheet = self._spreadsheet.worksheet(f"{MY_SHEET_NAME}")
+
+        round_number_index = reserve_requests_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE
+        )
+        discord_id_index = reserve_requests_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE
+        )
+        my_sheet.batch_update(
+            [
+                {
+                    "range": reserve_requests_column_indexes[round_number_index],
+                    "values": value_ranges[round_number_index],
+                },
+                {
+                    "range": reserve_requests_column_indexes[discord_id_index],
+                    "values": value_ranges[discord_id_index],
+                },
+            ],
+            value_input_option="raw",
+        )
+
+    def remove_reserve_request(self, discord_id: int) -> None:
+        """ """
+
+        reserve_requests_column_indexes = [
+            MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE,
+            MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE,
+        ]
+
+        value_ranges = self.get_single_column_value_ranges(
+            ranges=reserve_requests_column_indexes, sheet_name=MY_SHEET_NAME
+        )
+
+        round_number_index = reserve_requests_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE
+        )
+        discord_id_index = reserve_requests_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE
+        )
+
+        for i, row in enumerate(value_ranges[discord_id_index]):
+            if row[0] == str(discord_id):
+                value_ranges[round_number_index].pop(i)
+                value_ranges[discord_id_index].pop(i)
+                value_ranges[round_number_index].append([""])
+                value_ranges[discord_id_index].append([""])
+                break
+
+        my_sheet = self._spreadsheet.worksheet(f"{MY_SHEET_NAME}")
+
+        my_sheet.batch_update(
+            [
+                {
+                    "range": reserve_requests_column_indexes[round_number_index],
+                    "values": value_ranges[round_number_index],
+                },
+                {
+                    "range": reserve_requests_column_indexes[discord_id_index],
+                    "values": value_ranges[discord_id_index],
+                },
+            ],
+            value_input_option="raw",
+        )
+
+    def get_reserves_needed(
+        self,
+        division: str,
+        include_filled_reserves=True,
+    ) -> list[SpreadsheetDriver]:
+        """ """
+
+        reserve_requests_ranges = self.get_single_column_value_ranges(
+            ranges=self._reserve_requests_range_column_indexes,
+            sheet_name=MY_SHEET_NAME,
+        )
+
+        round_numbers_index = self._reserve_requests_range_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE
+        )
+        divisions_index = self._reserve_requests_range_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_DIVISIONS_NAMED_RANGE
+        )
+        discord_ids_index = self._reserve_requests_range_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE
+        )
+        reserves_index = self._reserve_requests_range_column_indexes.index(
+            MY_SHEET_RESERVE_REQUESTS_RESERVES_NAMED_RANGE
+        )
+
+        reserve_requests_round_numbers: list[str] = list(
+            map(lambda x: x[0], reserve_requests_ranges[round_numbers_index])
+        )
+        reserve_requests_divisions: list[str] = list(
+            map(lambda x: x[0], reserve_requests_ranges[divisions_index])
+        )
+        reserve_requests_discord_ids: list[str] = list(
+            map(lambda x: x[0], reserve_requests_ranges[discord_ids_index])
+        )
+        reserve_requests_reserves: list[str] = list(
+            map(lambda x: x[0], reserve_requests_ranges[reserves_index])
+        )
+
+        drivers_by_social_club_name, drivers_by_discord_id = self.get_roster_drivers()
+
+        reserves_needed: list[SpreadsheetDriver] = []
+
+        for i, round_number in enumerate(reserve_requests_round_numbers):
+            if round_number != str(self.round_number):
+                continue
+
+            division_ = reserve_requests_divisions[i]
+            if division_ != division:
+                continue
+
+            reserve = reserve_requests_reserves[i]
+            driver = drivers_by_discord_id[int(reserve_requests_discord_ids[i])]
+
+            driver_needs_reserve = reserve != ""
+            # technically this shouldn't ever be blank, but it's still possible
+            if not driver_needs_reserve:
+                continue
+
+            driver_has_reserve = (
+                driver_needs_reserve and reserve != RESERVE_NEEDED_STRING
+            )
+            if driver_has_reserve and not include_filled_reserves:
+                continue
+
+            if reserve in drivers_by_social_club_name:
+                driver.reserve = drivers_by_social_club_name[reserve]
+            reserves_needed.append(driver)
+
+        return reserves_needed
 
     def get_neighboring_division_numbers(self, division_number: int) -> tuple[int]:
         """ """
@@ -175,10 +337,12 @@ class Spreadsheet:
         )[division_number]
         return division_starting_order
 
-    def set_reserves(self, round_number: int, drivers: list[SpreadsheetDriver]) -> None:
+    def set_reserves(self, drivers: list[SpreadsheetDriver]) -> None:
         """`drivers` is a list of drivers that we are updating the reserves for."""
 
-        round_sheet = self._spreadsheet.worksheet(f"{ROUND_TAB_PREFIX}{round_number}")
+        round_sheet = self._spreadsheet.worksheet(
+            f"{ROUND_TAB_PREFIX}{self.round_number}"
+        )
 
         if (
             self._starting_order_drivers_range is None
@@ -237,7 +401,7 @@ class Spreadsheet:
         roster_value_ranges: list[
             gs.worksheet.ValueRange
         ] = self.get_single_column_value_ranges(
-            sheet_name=ROSTER_SHEET_NAME, ranges=self._roster_column_indexes
+            ranges=self._roster_column_indexes, sheet_name=ROSTER_SHEET_NAME
         )
 
         roster_drivers: list[str] = list(
@@ -304,7 +468,9 @@ class Spreadsheet:
         return drivers_by_social_club_name, drivers_by_discord_id
 
     def get_starting_orders(self, round_number: int) -> list[list[SpreadsheetDriver]]:
-        """ """
+        """returns a list of lists of drivers. every driver has a reserve and
+        every reserve is not None, but the name could be blank and discord_id
+        could be None."""
 
         round_sheet = self._spreadsheet.worksheet(f"{ROUND_TAB_PREFIX}{round_number}")
 
@@ -356,7 +522,9 @@ class Spreadsheet:
 
             driver = drivers_by_social_club_name[driver_value]
 
-            reserve_is_driver = starting_order_reserves[i][0] in drivers_by_social_club_name
+            reserve_is_driver = (
+                starting_order_reserves[i][0] in drivers_by_social_club_name
+            )
             if reserve_is_driver:
                 reserve = drivers_by_social_club_name[starting_order_reserves[i][0]]
             else:

@@ -1,3 +1,4 @@
+from datetime import datetime
 import discord
 import os
 import re
@@ -28,6 +29,11 @@ RESERVE_ROLE_ID = 696070455194419280
 SPREADSHEET_CHANNEL_ID = 894284840520802384
 LATE_JOINERS_AND_RESERVES_CHANNEL_ID = 932340228277039164
 
+STARTING_TIMES: dict[str, list[int]] = {  # UK time, divisions
+    "17:00": [2, 4, 6],
+    "18:00": [1, 3, 5],
+}
+
 #########   SPREADSHEET INFO   #########
 
 SERVICE_ACCOUNT_KEY = os.path.join(
@@ -35,6 +41,7 @@ SERVICE_ACCOUNT_KEY = os.path.join(
 ).replace("/", os.sep)
 SPREADSHEET_KEY = "1axNs6RyCy8HE8AEtH5evzBt-cxQyI8YpGutiwY8zfEU"  # season 7
 ROUND_TAB_PREFIX = "r"
+RESERVE_NEEDED_STRING = "RESERVE NEEDED"
 
 MY_SHEET_NAME = "my sheet"
 ROSTER_SHEET_NAME = "roster"
@@ -46,6 +53,14 @@ ROSTER_DIVS_NAMED_RANGE = "roster_divs"
 ROSTER_STATUS_NAMED_RANGE = "roster_statuses"
 
 MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE = "my_sheet_bottom_division"
+MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE = (
+    "my_sheet_reserve_requests_discord_ids"
+)
+MY_SHEET_RESERVE_REQUESTS_DIVISIONS_NAMED_RANGE = "my_sheet_reserve_requests_divisions"
+MY_SHEET_RESERVE_REQUESTS_RESERVES_NAMED_RANGE = "my_sheet_reserve_requests_reserves"
+MY_SHEET_RESERVE_REQUESTS_ROUND_NUMBERS_NAMED_RANGE = (
+    "my_sheet_reserve_requests_round_numbers"
+)
 MY_SHEET_ROUND_NUMBER_NAMED_RANGE = "my_sheet_round_number"
 MY_SHEET_ROUND_TAB_DIVISION_OFFSET = "my_sheet_round_tab_division_offset"
 MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE = (
