@@ -118,6 +118,21 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 
 #     await tepcott_reserve_remove.reserve_remove(ctx, bot, driver)
 
+### /handbook ###
+bot.slash_command(
+    guild_ids=[tepcott_guild_id],
+    description="Sends a link to the TEPCOTT Handbook.",
+)
+async def handbook(ctx: discord.ApplicationContext):
+    """/handbook"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await ctx.respond(
+        "https://docs.google.com/document/d/1Hayw1pUfQq9RWy5mbGG33Yszq6RuuwX_nERtbyIb6Bs"
+    )
+
 
 ### /startingorder ###
 @bot.slash_command(

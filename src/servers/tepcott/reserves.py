@@ -113,27 +113,27 @@ async def update_reserve_embed(
         if has_reserve:
             driver_str += " ✅"
             if driver.reserve.division.isnumeric():
-                reserves_division = int(driver.reserve.division)
+                reserves_division = f"d{int(driver.reserve.division)}"
             else:
-                reserves_division = int(driver.reserve.qualifying_division)
+                reserves_division = f"rd{int(driver.reserve.qualifying_division)}"
             embed.fields[
                 division_number
-            ].value += f"d{reserves_division} - `{driver.reserve.social_club_name}` ✅\n"  # d# - `reserve` ✅
+            ].value += f"{SPACE_CHAR*2}`{reserves_division}` **-** `{driver.reserve.social_club_name}` ✅\n"  # "    `d#` **-** `reserve` ✅"
 
         embed.fields[
             0
-        ].value += f"d{division_number} - {driver_str}\n"  # d# - `driver` ✅
+        ].value += f"{SPACE_CHAR*2}`d{division_number}` **-** {driver_str}\n"  # `    d#` **-** `driver` ✅
 
     for division in reserves_available_by_division:
         for reserve in reserves_available_by_division[division]:
             division_number = int(reserve.reserve_division)
             if reserve.division.isnumeric():
-                reserves_division = int(reserve.division)
+                reserves_division = f"d{int(reserve.division)}"
             else:
-                reserves_division = int(reserve.qualifying_division)
+                reserves_division = f"rd{int(reserve.qualifying_division)}"
             embed.fields[
                 division_number
-            ].value += f"d{reserves_division} - `{reserve.social_club_name}`\n"
+            ].value += f"{SPACE_CHAR*2}`{reserves_division}` **-** `{reserve.social_club_name}`\n"  # "    `[r]d#` **-** `reserve`"
 
     for field in embed.fields[:-1]:
         field.value += SPACE_CHAR
@@ -295,6 +295,7 @@ async def add_reserves_reactions(msg: discord.Message):
 
 async def reset_reserve_msg(msg: discord.Message):
     """ """
+    print(f"Resetting reserve embed in {msg.guild.name} ({msg.guild.id})")
 
     await clear_reserves_reactions(msg=msg)
     await add_reserves_reactions(msg=msg)
@@ -304,10 +305,13 @@ async def reset_reserve_msg(msg: discord.Message):
     spreadsheet = Spreadsheet()
 
     content_str = (
+        "**Reserve Rules**\n"
         "⠀• Reserves are assigned on a first-come-first-served basis.\n"
-        "⠀• While it is possible for drivers 2 divisions slower to reserve, reserves within 1 division are given priority.\n"
-        "⠀• Contact a DoubleD if you have a reserve from outside of the event.\n"
-        "⠀• Only reserves will be notified upon assignment or un-assignment (not drivers).\n"
+        "⠀• Reserves can be 1 division faster or any division slower.\n"
+        "⠀• Reserves within 1 division are given priority.\n"
+        "⠀• Reserves cannot promote a driver, and they only score 75% points for the driver.\n"
+        "⠀• Reserves from a faster division start at the back.\n"
+        "⠀💥 Contact a DoubleD if you have a reserve from outside of the event.\n"
         "\n"
         f"{get_starting_times_string(tepcott_guild=msg.guild, bottom_division_number=spreadsheet.bottom_division_number)}\n"
     )
@@ -315,6 +319,9 @@ async def reset_reserve_msg(msg: discord.Message):
     embed.description = (
         "⠀• If you cannot race this round, click the 👋\n"
         "⠀• If you want to reserve this round, click the division emoji(s)\n"
+        "⠀• Un-clicking will remove your request/availability.\n"
+        "⠀• Only reserves will be pinged upon (un)assignment.\n"
+        "⠀• Channel closes an hour before the races.\n"
         f"{SPACE_CHAR}"
     )
 
@@ -329,9 +336,8 @@ async def reset_reserve_msg(msg: discord.Message):
     embed.add_field(
         name="**Extra information:**",
         value=(
-            "⠀• Channel closes an hour before the first race.\n"
-            "⠀• Un-clicking will remove your request/availability.\n"
             "⠀• ✅ indicates a driver is assigned a reserve and vice-versa\n"
+            "⠀• `rd#` indicates driver is a reserve and is not in a division\n"
         ),
     )
 
