@@ -46,6 +46,11 @@ STARTING_TIMES: dict[str, list[int]] = {  # UK time, divisions
     "17:00": [2, 4, 6],
     "18:00": [1, 3, 5],
 }
+DIVISION_STARTING_TIMES: dict[int, str] = {
+    division: start_time
+    for start_time, divisions in STARTING_TIMES.items()
+    for division in divisions
+}
 
 #########   DATABASE INFO   #########
 DATABASE_NAME = "TEPCOTT"

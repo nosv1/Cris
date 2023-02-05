@@ -12,6 +12,7 @@ from servers.tepcott.database import (
     remove_reserve_request,
 )
 from servers.tepcott.tepcott import (
+    DIVISION_STARTING_TIMES,
     LIGHT_BLUE,
     RESERVE_NEEDED_STRING,
     SPACE_CHAR,
@@ -325,6 +326,19 @@ async def handle_reserve_available_reaction(
         )
         await msg.remove_reaction(payload.emoji, reserve_member)
         return
+
+    reserve_in_division = reserve.division.isnumeric()
+    if reserve_in_division:
+        same_time_as_race = (
+            DIVISION_STARTING_TIMES[int(reserve.division)]
+            == DIVISION_STARTING_TIMES[reserve_division_number]
+        )
+        if same_time_as_race:
+            print(
+                f"{reserve_member.display_name} is already in division {reserve.division} which starts at the same time as division {reserve_division_number}"
+            )
+            await msg.remove_reaction(payload.emoji, reserve_member)
+            return
 
     add_reserve_available(database=bot.tepcott_database, reserve=reserve)
     reserve_assignments = await update_reserve_embed(
