@@ -11,9 +11,6 @@ import os
 from servers.phyner.phyner import GUILD_ID as phyner_guild_id
 from servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
 
-# from servers.tepcott.commands import reserve_needed as tepcott_reserve_needed
-# from servers.tepcott.commands import reserve_assign_unassign as tepcott_reserve_assign
-# from servers.tepcott.commands import reserve_remove as tepcott_reserve_remove
 from servers.tepcott.commands import updatedivs as tepcott_updatedivs
 from servers.tepcott.commands import startingorder as tepcott_startingorder
 from servers.tepcott.commands import startingtimes as tepcott_startingtimes
@@ -49,74 +46,6 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 
 
 ########################    COMMANDS    ########################
-
-
-# tepcott_reserves_command_group = bot.create_group(
-#     "reserve", "Commands for managing reserves.", guild_ids=[tepcott_guild_id]
-# )
-
-# ### /reserve needed ###
-# @tepcott_reserves_command_group.command(
-#     name="needed",
-#     description="Sets a driver as needing a reserve.",
-# )
-# @option(
-#     name="driver",
-#     type=discord.Member,
-#     description="The driver who needs a reserve.",
-# )
-# async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
-#     """/reserve needed <@driver>"""
-
-#     if bot.debug and not bot.is_developer(ctx.author):
-#         return
-
-#     await tepcott_reserve_needed.reserve_needed(ctx, bot, driver)
-
-
-# ### /reserve assign @driver @reserve ###
-# @tepcott_reserves_command_group.command(
-#     name="assign",
-#     description="Assigns a reserve to a driver.",
-# )
-# @option(
-#     name="driver",
-#     type=discord.Member,
-#     description="The driver to assign the reserve to.",
-# )
-# @option(
-#     name="reserve",
-#     type=discord.Member,
-#     description="The reserve to assign.",
-# )
-# async def reserve(
-#     ctx: discord.ApplicationContext, driver: discord.Member, reserve: discord.Member
-# ):
-#     """/reserve assign <@driver> <@driverreserve>"""
-
-#     if bot.debug and not bot.is_developer(ctx.author):
-#         return
-
-#     await tepcott_reserve_assign.reserve_assign(ctx, bot, driver, reserve)
-
-
-# ### /reserve remove @driver ###
-# @tepcott_reserves_command_group.command(
-#     name="remove",
-#     description="Removes a driver's reserve.",
-# )
-# @option(
-#     name="driver",
-#     type=discord.Member,
-#     description="The driver to remove the reserve from.",
-# )
-# async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
-#     """/reserve remove <@driver>"""
-
-#     if bot.debug and not bot.is_developer(ctx.author):
-#         return
-
-#     await tepcott_reserve_remove.reserve_remove(ctx, bot, driver)
 
 ### /handbook ###
 @bot.slash_command(
