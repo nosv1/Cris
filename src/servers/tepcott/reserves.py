@@ -317,6 +317,7 @@ async def reset_reserve_msg(msg: discord.Message):
     embed.description = (
         "⠀• If you cannot race this round, click the 👋\n"
         "⠀• If you want to reserve this round, click the division emoji(s)\n"
+        f"{SPACE_CHAR}"
     )
 
     embed.add_field(name="**Reserve needed for:**", value=SPACE_CHAR, inline=False)
