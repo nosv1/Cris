@@ -21,8 +21,13 @@ def add_reserve_available(database: Database, reserve: SpreadsheetDriver):
     sql = (
         f"INSERT INTO {RESERVES_AVAILABLE_TABLE_NAME} "
         f"({RESERVES_AVAILABLE_DISCORD_IDS_COLUMN}, {RESERVES_AVAILABLE_DIVISIONS_COLUMN}, {RESERVES_AVAILABLE_RESERVE_DIVISIONS_COLUMN}) "
-        f"VALUES ('{reserve.discord_id}', '{reserve.division}', '{reserve.reserve_division}')"
+        f"VALUES ('{reserve.discord_id}', '{reserve.division}', '{reserve.reserve_division}') "
+        f"ON DUPLICATE KEY UPDATE "
+        f"{RESERVES_AVAILABLE_DISCORD_IDS_COLUMN} = '{reserve.discord_id}', "
+        f"{RESERVES_AVAILABLE_DIVISIONS_COLUMN} = '{reserve.division}', "
+        f"{RESERVES_AVAILABLE_RESERVE_DIVISIONS_COLUMN} = '{reserve.reserve_division}'"
     )
+
     database.cursor.execute(sql)
     database.commit()
     database.close()
@@ -35,7 +40,8 @@ def add_reserve_request(database: Database, driver: SpreadsheetDriver):
     sql = (
         f"INSERT INTO {RESERVE_REQUESTS_TABLE_NAME} "
         f"({RESERVE_REQUESTS_DISCORD_IDS_COLUMN}, {RESERVE_REQUESTS_DIVISIONS_COLUMN}) "
-        f"VALUES ('{driver.discord_id}', '{driver.division}')"
+        f"VALUES ('{driver.discord_id}', '{driver.division}') "
+        f"ON DUPLICATE KEY UPDATE {RESERVE_REQUESTS_DIVISIONS_COLUMN} = '{driver.division}'"
     )
     database.cursor.execute(sql)
     database.commit()
