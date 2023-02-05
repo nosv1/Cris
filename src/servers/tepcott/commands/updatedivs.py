@@ -210,7 +210,7 @@ async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
     )
 
     if not ctx.author.guild_permissions.administrator:
-        await ctx.send(
+        await ctx.respond(
             content="You do not have permission to use this command", ephemeral=True
         )
         return
