@@ -37,11 +37,7 @@ def get_reserve_assignments(
         division_deltas: list[int] = []
         reserve_indexes: list[int] = []
         for i, reserve in enumerate(reserves_available_by_division[division]):
-            if reserve.division.isnumeric():
-                reserves_division = int(reserve.division)
-            else:
-                reserves_division = int(reserve.qualifying_division)
-            division_delta = abs(reserves_division - division)
+            division_delta = abs(reserve.interpreted_division - division)
             division_deltas.append(division_delta if division_delta > 1 else 0)
             reserve_indexes.append(i)
 
@@ -151,7 +147,7 @@ async def handle_reserve_needed_reaction(
     reaction_added: bool,
 ):
     print(
-        f"{driver_member.display_name} ({driver_member.id}) from {driver_member.guild.name} ({driver_member.guild.id}) reacted with {payload.emoji.name} to reserve embed"
+        f"{driver_member.display_name} ({driver_member.id}) from {driver_member.guild.name} ({driver_member.guild.id}) {'added' if reaction_added else 'removed'} {payload.emoji.name} to reserve embed"
     )
 
     spreadsheet = Spreadsheet()
@@ -212,7 +208,7 @@ async def handle_reserve_available_reaction(
     reaction_added: bool,
 ):
     print(
-        f"{reserve_member.display_name} ({reserve_member.id}) from {reserve_member.guild.name} ({reserve_member.guild.id}) reacted with {payload.emoji.name} to reserve embed"
+        f"{reserve_member.display_name} ({reserve_member.id}) from {reserve_member.guild.name} ({reserve_member.guild.id}) {'added' if reaction_added else 'removed'} {payload.emoji.name} to reserve embed"
     )
 
     spreadsheet = Spreadsheet()
@@ -253,14 +249,9 @@ async def handle_reserve_available_reaction(
         spreadsheet.set_reserves(reserve_assignments)
         return
 
-    reserve_in_division = reserve.division.isnumeric()
-    reserves_division: int
-    if not reserve_in_division:
-        reserves_division = int(reserve.qualifying_division)
-    else:
-        reserves_division = int(reserve.division)
-
-    reserve_eligible_for_division = (reserves_division - reserve_division_number) >= -1
+    reserve_eligible_for_division = (
+        reserve.interpreted_division - reserve_division_number
+    ) >= -1
     if not reserve_eligible_for_division:
         print(
             f"{reserve_member.display_name} is not eligible for division {reserve_division_number}"

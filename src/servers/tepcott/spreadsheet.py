@@ -589,3 +589,12 @@ class SpreadsheetDriver:
         self.reserve = reserve
 
         self.reserve_division: Optional[int] = None
+
+    @property
+    def interpreted_division(self) -> int:
+        if self.division.isnumeric():
+            return int(self.division)
+        elif self.qualifying_division.isnumeric():
+            return int(self.qualifying_division)
+        else:
+            return -1
