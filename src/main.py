@@ -3,8 +3,9 @@ from Bot import Bot
 import discord
 from discord import option
 
-import event_handlers.on_ready as eh_on_ready
+import event_handlers.on_message as eh_on_message
 import event_handlers.on_raw_reaction as eh_on_raw_reaction
+import event_handlers.on_ready as eh_on_ready
 
 import os
 
@@ -19,7 +20,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-bot: Bot = Bot(debug=os.getenv("DEBUG").lower() == "true")
+intents = discord.Intents.default()
+intents.message_content = True
+bot: Bot = Bot(debug=os.getenv("DEBUG").lower() == "true", intents=intents)
 
 ########################    EVENT HANDLERS    ########################
 
@@ -29,6 +32,13 @@ async def on_ready():
     """ """
 
     await eh_on_ready.on_ready(bot)
+
+
+@bot.event
+async def on_message(message: discord.Message):
+    """ """
+
+    await eh_on_message.on_message(bot, message)
 
 
 @bot.event

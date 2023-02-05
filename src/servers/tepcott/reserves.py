@@ -11,7 +11,12 @@ from servers.tepcott.database import (
     remove_reserve_available,
     remove_reserve_request,
 )
-from servers.tepcott.tepcott import RESERVE_NEEDED_STRING, SPACE_CHAR, get_div_emojis
+from servers.tepcott.tepcott import (
+    LIGHT_BLUE,
+    RESERVE_NEEDED_STRING,
+    SPACE_CHAR,
+    get_div_emojis,
+)
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 
 from typing import Optional
@@ -292,6 +297,7 @@ async def reset_reserve_msg(msg: discord.Message):
     await add_reserves_reactions(msg=msg)
 
     embed = msg.embeds[0]
+    embed.color = discord.Color(LIGHT_BLUE)
     embed.clear_fields()
     spreadsheet = Spreadsheet()
 
