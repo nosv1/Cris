@@ -6,7 +6,7 @@ from discord import Message
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 from typing import Optional
 from servers.tepcott.tepcott import (
-    DIVISION_CHANNELS_IDS,
+    DIVISION_CHANNEL_IDS,
     LATE_JOINERS_AND_RESERVES_CHANNEL_ID,
     RESERVE_NEEDED_STRING,
 )
@@ -56,7 +56,7 @@ async def reserve_needed(
                 division_number=int(self.driver.division)
             ):
                 division_channel = await ctx.guild.fetch_channel(
-                    DIVISION_CHANNELS_IDS[division_number]
+                    DIVISION_CHANNEL_IDS[division_number]
                 )
                 await division_channel.send(
                     f"Hello, friends. {interaction.user.display_name} wanted to inform you all, {self.driver.social_club_name}, in Division {self.driver.division}, needs a reserve. Contact a DoubleD if you are interested in reserving - KIFFLOM!"

@@ -13,7 +13,7 @@ def get_starting_times_string(
 ) -> str:
     """ """
 
-    div_emojis = get_div_emojis(tepcott_guild)
+    div_emojis = get_div_emojis(tepcott_guild)[:bottom_division_number]
 
     timezone = pytz.timezone("Europe/London")
     dt = datetime.now(timezone)
@@ -44,7 +44,7 @@ def get_starting_times_string(
     return starting_times_string
 
 
-async def startingtimes(ctx: discord.ApplicationContext, bot: Bot) -> None:
+async def startingtimes(ctx: discord.ApplicationContext) -> None:
     """ """
     print(
         f"{ctx.author.display_name} ({ctx.author.id}) from {ctx.guild.name} ({ctx.guild.id}) used ./{ctx.command.name}"
@@ -53,11 +53,9 @@ async def startingtimes(ctx: discord.ApplicationContext, bot: Bot) -> None:
     interaction = await ctx.respond(
         content="Hi there... I'm just figuring out how many divisions are active real quick. - KIFFLOM!"
     )
-    spreadsheet = Spreadsheet()
-
     await interaction.edit_original_response(
         content=get_starting_times_string(
             tepcott_guild=ctx.guild,
-            bottom_division_number=spreadsheet.bottom_division_number,
+            bottom_division_number=Spreadsheet().bottom_division_number,
         )
     )

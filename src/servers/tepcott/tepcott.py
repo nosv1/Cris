@@ -6,7 +6,7 @@ import re
 #########   DISCORD IDs   #########
 
 GUILD_ID: int = 450289520009543690
-DIVISION_CHANNELS_IDS: list[int] = [
+DIVISION_CHANNEL_IDS: list[int] = [
     0,
     702242781946576936,
     702244420153638983,
@@ -106,16 +106,20 @@ def get_cris_emoji(guild: discord.Guild) -> discord.Emoji:
     return discord.utils.get(guild.emojis, id=CRIS_EMOJI_ID)
 
 
+def get_div_channels(channels: list[discord.TextChannel]) -> list[discord.TextChannel]:
+    """div - 1"""
+    div_channels = [c for c in channels if c.id in DIVISION_CHANNEL_IDS]
+    div_channels.sort(key=lambda c: DIVISION_CHANNEL_IDS.index(c.id))
+    return div_channels
+
+
 def get_div_emojis(guild: discord.Guild) -> list[discord.Emoji]:
     """only includes active divisions"""
-    from servers.tepcott.spreadsheet import Spreadsheet
-
-    ss = Spreadsheet()
 
     div_emojis = [e for e in guild.emojis if re.match(DIV_EMOJI_NAME_PATTERN, e.name)]
     div_emojis.sort(key=lambda e: e.name)
 
-    return div_emojis[: ss.bottom_division_number]
+    return div_emojis
 
 
 async def format_discord_name(

@@ -98,7 +98,8 @@ def get_reserve_requests(
         RESERVE_REQUESTS_DISCORD_IDS_COLUMN
     )
     reserve_requests = [
-        drivers_by_discord_id[int(r[discord_id_column_index])] for r in rows
+        copy.deepcopy(drivers_by_discord_id[int(r[discord_id_column_index])])
+        for r in rows
     ]
 
     return reserve_requests
@@ -140,8 +141,7 @@ def get_reserves_available(
         discord_id = int(row[discord_id_column_index])
         reserve_division = int(row[reserve_division_column_index])
 
-        reserve = drivers_by_discord_id[discord_id]
-        reserve = copy.deepcopy(reserve)
+        reserve = copy.deepcopy(drivers_by_discord_id[discord_id])
         reserve.reserve_division = reserve_division
         reserves_available.append(reserve)
 

@@ -5,7 +5,7 @@ import discord
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 from typing import Optional
 from servers.tepcott.tepcott import (
-    DIVISION_CHANNELS_IDS,
+    DIVISION_CHANNEL_IDS,
     LATE_JOINERS_AND_RESERVES_CHANNEL_ID,
     RESERVE_NEEDED_STRING,
 )
@@ -51,7 +51,7 @@ class ReserveAssignConfirmButton(discord.ui.Button):
             message_str = f"Good news, friends! `{self.ctx.author.display_name}` says `{self.driver_member.display_name}` no longer needs a reserve for Round {self.spreadsheet.round_number}."
 
         div_channel = await self.bot.fetch_channel(
-            DIVISION_CHANNELS_IDS[int(self.driver.division)]
+            DIVISION_CHANNEL_IDS[int(self.driver.division)]
         )
         interaction_channel_is_div_channel = interaction.channel.id == div_channel.id
         if interaction_channel_is_div_channel:
@@ -128,7 +128,7 @@ class ReserveUnassignConfirmButton(discord.ui.Button):
         self.spreadsheet.set_reserves(drivers=[self.driver])
 
         div_channel = await self.bot.fetch_channel(
-            DIVISION_CHANNELS_IDS[int(self.driver.division)]
+            DIVISION_CHANNEL_IDS[int(self.driver.division)]
         )
         await div_channel.send(
             f"Well this is less than ideal... It has been brough to my attention {self.reserve_member.mention} is no longer reserving for {self.driver_member.mention} for Round {self.spreadsheet.round_number}."
@@ -141,7 +141,9 @@ class ReserveUnassignConfirmButton(discord.ui.Button):
             f"`{self.ctx.author.display_name}` unassigned `{self.reserve_member.display_name}` as a reserve for `{self.driver_member.display_name}` for Round {self.spreadsheet.round_number}."
         )
 
-        await interaction.response.edit_message(content=f"Reserve unassigned.", view=None)
+        await interaction.response.edit_message(
+            content=f"Reserve unassigned.", view=None
+        )
 
 
 class ReserveUnassignCancelButton(discord.ui.Button):

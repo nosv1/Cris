@@ -16,6 +16,7 @@ from servers.tepcott.tepcott import (
     RESERVE_NEEDED_STRING,
     SPACE_CHAR,
     get_div_emojis,
+    get_div_channels,
 )
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 
@@ -28,7 +29,9 @@ def get_reserve_assignments(
 ) -> tuple[list[SpreadsheetDriver], dict[int, list[SpreadsheetDriver]]]:
     """returns a list of all reserve needed drivers with .reserve set as a
     reserve driver or reserve needed string and then the leftover available
-    reserves by division"""
+    reserves by division
+
+    reserve_assignments, reserves_available_by_division"""
 
     # these lists are still in order of driver saying they're available
     reserves_available_by_division: dict[int, list[SpreadsheetDriver]] = {}
@@ -76,12 +79,61 @@ def get_reserve_assignments(
     return reserve_assignments, reserves_available_by_division
 
 
+async def handle_assignment_changes(
+    div_channels: list[discord.TextChannel],
+    div_emojis: list[discord.Emoji],
+    old_assignments: Optional[list[SpreadsheetDriver]],
+    new_assignments: list[SpreadsheetDriver],
+) -> None:
+    """sends pings to div channels if a reserve is newly assigned or unassigned"""
+
+    if old_assignments is None:
+        return
+
+    old_reserves_by_reserve_id: dict[int, SpreadsheetDriver] = {}  # reserve_id: driver
+    for driver in old_assignments:
+        if driver.reserve.social_club_name == RESERVE_NEEDED_STRING:
+            continue
+        old_reserves_by_reserve_id[driver.reserve.discord_id] = driver
+
+    new_reserves_by_reserve_id: dict[int, SpreadsheetDriver] = {}  # reserve_id: driver
+    for driver in new_assignments:
+        if driver.reserve.social_club_name == RESERVE_NEEDED_STRING:
+            continue
+        new_reserves_by_reserve_id[driver.reserve.discord_id] = driver
+
+    # checking if newly unassigned
+    for reserve_id, driver in old_reserves_by_reserve_id.items():
+        no_change = reserve_id in new_reserves_by_reserve_id
+        if no_change:
+            continue
+
+        division = int(driver.division)
+        div_channel = div_channels[division - 1]
+        await div_channel.send(
+            f"Hi, <@{reserve_id}>. For the moment, you have been unassigned as a {div_emojis[division-1]} reserve. You are still on the list, though - KIFFLOM!"
+        )
+
+    # checking if newly assigned
+    for reserve_id, driver in new_reserves_by_reserve_id.items():
+        no_change = reserve_id in old_reserves_by_reserve_id
+        if no_change:
+            continue
+
+        division = int(driver.division)
+        div_channel = div_channels[division - 1]
+        await div_channel.send(
+            f"Hey there, <@{reserve_id}>! You have been assigned as a {div_emojis[division-1]} reserve. You can use `/startingorder` to see who you're currently assigned to - KIFFLOM!"
+        )
+
+
 async def update_reserve_embed(
     msg: discord.Message,
     database: Database,
     spreadsheet: Optional[Spreadsheet] = None,
     drivers_by_discord_id: Optional[dict[int, SpreadsheetDriver]] = None,
     old_reserve_assignments: Optional[list[SpreadsheetDriver]] = None,
+    reserve_reaction: bool = True,
 ):
     """ """
 
@@ -100,6 +152,14 @@ async def update_reserve_embed(
     reserve_assignments, reserves_available_by_division = get_reserve_assignments(
         reserves_requests=reserve_requests, reserves_available=reserves_available
     )
+    if not reserve_reaction:
+        # we only ping if it wasn't a reserve that reacted
+        await handle_assignment_changes(
+            div_channels=get_div_channels(channels=msg.guild.text_channels),
+            div_emojis=get_div_emojis(guild=msg.guild),
+            old_assignments=old_reserve_assignments,
+            new_assignments=reserve_assignments,
+        )
 
     embed = msg.embeds[0]
     for field in embed.fields[:-1]:
@@ -163,7 +223,7 @@ async def handle_reserve_needed_reaction(
     old_reserves_available = get_reserves_available(
         database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
     )
-    old_reserve_assignments = get_reserve_assignments(
+    old_reserve_assignments, _ = get_reserve_assignments(
         reserves_requests=old_reserves_needed, reserves_available=old_reserves_available
     )
 
@@ -184,6 +244,7 @@ async def handle_reserve_needed_reaction(
             database=bot.tepcott_database,
             drivers_by_discord_id=drivers_by_discord_id,
             old_reserve_assignments=old_reserve_assignments,
+            reserve_reaction=False,
         )
         spreadsheet.set_reserves(reserve_assignemnts + [driver])
         return
@@ -201,6 +262,7 @@ async def handle_reserve_needed_reaction(
         database=bot.tepcott_database,
         drivers_by_discord_id=drivers_by_discord_id,
         old_reserve_assignments=old_reserve_assignments,
+        reserve_reaction=False,
     )
     spreadsheet.set_reserves(reserve_assignemnts)
 
@@ -224,7 +286,7 @@ async def handle_reserve_available_reaction(
     old_reserves_available = get_reserves_available(
         database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
     )
-    old_reserve_assignments = get_reserve_assignments(
+    old_reserve_assignments, _ = get_reserve_assignments(
         reserves_requests=old_reserves_needed, reserves_available=old_reserves_available
     )
 
@@ -284,7 +346,7 @@ async def add_reserves_reactions(msg: discord.Message):
     """ """
     await msg.add_reaction("👋")
 
-    div_emojis = get_div_emojis(guild=msg.guild)
+    div_emojis = get_div_emojis(guild=msg.guild)[: Spreadsheet().bottom_division_number]
     for div_emoji in div_emojis:
         await msg.add_reaction(div_emoji)
 
@@ -317,7 +379,7 @@ async def reset_reserve_msg(msg: discord.Message):
         "⠀• If you cannot race this round, click the 👋\n"
         "⠀• If you want to reserve this round, click the division emoji(s)\n"
         "⠀• Un-clicking will remove your request/availability.\n"
-        "⠀• Only reserves will be pinged upon (un)assignment.\n"
+        "⠀• Reserves will be pinged upon (un)assignment.\n"
         "⠀• Channel closes an hour before the races.\n"
         f"{SPACE_CHAR}"
     )

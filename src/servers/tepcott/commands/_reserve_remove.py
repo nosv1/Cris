@@ -6,7 +6,7 @@ from discord import Message
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 from typing import Optional
 from servers.tepcott.tepcott import (
-    DIVISION_CHANNELS_IDS,
+    DIVISION_CHANNEL_IDS,
     LATE_JOINERS_AND_RESERVES_CHANNEL_ID,
     RESERVE_NEEDED_STRING,
 )
@@ -80,7 +80,7 @@ async def reserve_remove(
                 message_str = f"`Good news, friends! {self.ctx.author.display_name}` says `{self.driver_member.display_name}` no longer needs a reserve for Round {self.spreadsheet.round_number}."
 
             div_channel = await self.bot.fetch_channel(
-                DIVISION_CHANNELS_IDS[int(self.driver.division)]
+                DIVISION_CHANNEL_IDS[int(self.driver.division)]
             )
             interaction_channel_is_div_channel = (
                 interaction.channel.id == div_channel.id

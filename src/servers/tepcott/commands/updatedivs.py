@@ -5,7 +5,7 @@ from discord import Member, Message, Role
 
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 from servers.tepcott.tepcott import (
-    DIVISION_CHANNELS_IDS,
+    DIVISION_CHANNEL_IDS,
     DIVISION_ROLE_IDS,
     RACER_ROLE_ID,
     format_discord_name,
@@ -23,7 +23,7 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
 
     racer_role = ctx.guild.get_role(RACER_ROLE_ID)
     division_roles: list[Role] = [None] * len(DIVISION_ROLE_IDS)
-    division_channels: list[discord.TextChannel] = [None] * len(DIVISION_CHANNELS_IDS)
+    division_channels: list[discord.TextChannel] = [None] * len(DIVISION_CHANNEL_IDS)
     promotions_by_division: list[list[Optional[Member]]] = [
         [] for _ in range(len(DIVISION_ROLE_IDS))
     ]
@@ -37,8 +37,8 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
             division_roles[DIVISION_ROLE_IDS.index(role.id)] = role
 
     for channel in await ctx.guild.fetch_channels():
-        if channel.id in DIVISION_CHANNELS_IDS:
-            division_channels[DIVISION_CHANNELS_IDS.index(channel.id)] = channel
+        if channel.id in DIVISION_CHANNEL_IDS:
+            division_channels[DIVISION_CHANNEL_IDS.index(channel.id)] = channel
 
     total_drivers = len(driver_by_social_club_name)
     for i, driver in enumerate(driver_by_social_club_name.values()):
