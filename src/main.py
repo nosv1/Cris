@@ -119,7 +119,7 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 #     await tepcott_reserve_remove.reserve_remove(ctx, bot, driver)
 
 ### /handbook ###
-bot.slash_command(
+@bot.slash_command(
     guild_ids=[tepcott_guild_id],
     description="Sends a link to the TEPCOTT Handbook.",
 )
