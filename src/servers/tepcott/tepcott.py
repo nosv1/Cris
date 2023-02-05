@@ -28,11 +28,38 @@ RACER_ROLE_ID = 450401326472495105
 RESERVE_ROLE_ID = 696070455194419280
 SPREADSHEET_CHANNEL_ID = 894284840520802384
 LATE_JOINERS_AND_RESERVES_CHANNEL_ID = 932340228277039164
+RESERVE_MESSAGE_ID = 1071305717778239588
+
+#########   COLORS   #########
+
+LIGHT_BLUE = 5672919
+
+#########   EMOJI STUFF   #########
+
+DIV_EMOJI_NAME_PATTERN = r"^D\d$"
+SPACE_CHAR = "⠀"
+CRIS_EMOJI_ID = 450402431227002886
+
+#########   TIME STUFF   #########
 
 STARTING_TIMES: dict[str, list[int]] = {  # UK time, divisions
     "17:00": [2, 4, 6],
     "18:00": [1, 3, 5],
 }
+
+#########   DATABASE INFO   #########
+DATABASE_NAME = "TEPCOTT"
+
+RESERVE_REQUESTS_TABLE_NAME = "reserve_requests"
+RESERVE_REQUESTS_REQUEST_IDS_COLUMN = "request_id"
+RESERVE_REQUESTS_DISCORD_IDS_COLUMN = "discord_id"
+RESERVE_REQUESTS_DIVISIONS_COLUMN = "division"
+
+RESERVES_AVAILABLE_TABLE_NAME = "reserves_available"
+RESERVES_AVAILABLE_AVAILABLE_IDS_COLUMN = "available_id"
+RESERVES_AVAILABLE_DISCORD_IDS_COLUMN = "discord_id"
+RESERVES_AVAILABLE_DIVISIONS_COLUMN = "division"  # quali div or current div of driver
+RESERVES_AVAILABLE_RESERVE_DIVISIONS_COLUMN = "reserve_division"  # div button clicked
 
 #########   SPREADSHEET INFO   #########
 
@@ -50,6 +77,7 @@ ROSTER_DRIVERS_NAMED_RANGE = "roster_drivers"
 ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE = "roster_sc_links"
 ROSTER_DISCORD_IDS_NAMED_RANGE = "roster_discord_ids"
 ROSTER_DIVS_NAMED_RANGE = "roster_divs"
+ROSTER_QUALIFYING_DIVISIONS_NAMED_RANGE = "roster_qualifying_divisions"
 ROSTER_STATUS_NAMED_RANGE = "roster_statuses"
 
 MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE = "my_sheet_bottom_division"
@@ -71,6 +99,23 @@ MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE = (
 )
 
 #########   FUNCTIONS   #########
+
+
+def get_cris_emoji(guild: discord.Guild) -> discord.Emoji:
+    """ """
+    return discord.utils.get(guild.emojis, id=CRIS_EMOJI_ID)
+
+
+def get_div_emojis(guild: discord.Guild) -> list[discord.Emoji]:
+    """only includes active divisions"""
+    from servers.tepcott.spreadsheet import Spreadsheet
+
+    ss = Spreadsheet()
+
+    div_emojis = [e for e in guild.emojis if re.match(DIV_EMOJI_NAME_PATTERN, e.name)]
+    div_emojis.sort(key=lambda e: e.name)
+
+    return div_emojis[: ss.bottom_division_number]
 
 
 async def format_discord_name(

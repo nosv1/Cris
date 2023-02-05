@@ -1,4 +1,5 @@
 import discord
+from Database import Database
 
 
 class Bot(discord.Bot):
@@ -9,6 +10,7 @@ class Bot(discord.Bot):
         self._developer_ids = [
             405944496665133058,  # Mo#9991
         ]
+        self.tepcott_database = Database("TEPCOTT")
 
     def is_developer(self, user: discord.User) -> bool:
         return user.id in self._developer_ids

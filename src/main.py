@@ -4,6 +4,7 @@ import discord
 from discord import option
 
 import event_handlers.on_ready as eh_on_ready
+import event_handlers.on_raw_reaction as eh_on_raw_reaction
 
 import os
 
@@ -31,6 +32,20 @@ async def on_ready():
     """ """
 
     await eh_on_ready.on_ready(bot)
+
+
+@bot.event
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
+    """ """
+
+    await eh_on_raw_reaction.on_raw_reaction(payload, bot, reaction_added=True)
+
+
+@bot.event
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
+    """ """
+
+    await eh_on_raw_reaction.on_raw_reaction(payload, bot, reaction_added=False)
 
 
 ########################    COMMANDS    ########################

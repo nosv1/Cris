@@ -16,12 +16,13 @@ from servers.tepcott.tepcott import (
     MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE,
     RESERVE_NEEDED_STRING,
     ROUND_TAB_PREFIX,
-    ROSTER_STATUS_NAMED_RANGE,
     ROSTER_DIVS_NAMED_RANGE,
     ROSTER_DISCORD_IDS_NAMED_RANGE,
-    ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE,
     ROSTER_DRIVERS_NAMED_RANGE,
+    ROSTER_QUALIFYING_DIVISIONS_NAMED_RANGE,
     ROSTER_SHEET_NAME,
+    ROSTER_STATUS_NAMED_RANGE,
+    ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE,
     SERVICE_ACCOUNT_KEY,
     SPREADSHEET_KEY,
 )
@@ -39,6 +40,7 @@ class Spreadsheet:
             ROSTER_SOCIAL_CLUB_LINKS_NAMED_RANGE,
             ROSTER_DISCORD_IDS_NAMED_RANGE,
             ROSTER_DIVS_NAMED_RANGE,
+            ROSTER_QUALIFYING_DIVISIONS_NAMED_RANGE,
             ROSTER_STATUS_NAMED_RANGE,
         ]
 
@@ -180,10 +182,10 @@ class Spreadsheet:
 
     def get_reserves_needed(
         self,
-        division: str,
+        divisions: set[str],
         include_filled_reserves=True,
     ) -> list[SpreadsheetDriver]:
-        """ """
+        """returns a list of SpreadsheetDriver objects for the reserves needed for the given divisions"""
 
         reserve_requests_ranges = self.get_single_column_value_ranges(
             ranges=self._reserve_requests_range_column_indexes,
@@ -224,8 +226,12 @@ class Spreadsheet:
             if round_number != str(self.round_number):
                 continue
 
-            division_ = reserve_requests_divisions[i]
-            if division_ != division:
+            division = reserve_requests_divisions[i]
+            if not division.isnumeric():
+                continue
+
+            division = int(division)
+            if division not in divisions:
                 continue
 
             reserve = reserve_requests_reserves[i]
@@ -438,6 +444,16 @@ class Spreadsheet:
                 ],
             )
         )
+        roster_quailfying_divs: list[str] = list(
+            map(
+                lambda x: x[0],
+                roster_value_ranges[
+                    self._roster_column_indexes.index(
+                        ROSTER_QUALIFYING_DIVISIONS_NAMED_RANGE
+                    )
+                ],
+            )
+        )
         roster_status: list[str] = list(
             map(
                 lambda x: x[0],
@@ -449,17 +465,26 @@ class Spreadsheet:
 
         drivers_by_social_club_name: dict[str, SpreadsheetDriver] = {}
         drivers_by_discord_id: dict[int, SpreadsheetDriver] = {}
-        for (driver, social_club_link, discord_id, division_number, status) in zip(
+        for (
+            driver,
+            social_club_link,
+            discord_id,
+            division_number,
+            qualifying_division,
+            status,
+        ) in zip(
             roster_drivers,
             roster_social_club_links,
             roster_discord_ids,
             roster_divs,
+            roster_quailfying_divs,
             roster_status,
         ):
             driver = SpreadsheetDriver(
                 social_club_name=driver,
                 discord_id=int(discord_id),
                 division=division_number,
+                qualifying_division=qualifying_division,
                 status=status,
             )
             drivers_by_social_club_name[driver.social_club_name] = driver
@@ -547,6 +572,7 @@ class SpreadsheetDriver:
         social_club_name: str,
         discord_id: Optional[int] = None,
         division: str = "N/A",
+        qualifying_division: str = "N/A",
         status: str = "Racing",
         reserve: Optional[SpreadsheetDriver] = None,
     ) -> None:
@@ -558,5 +584,8 @@ class SpreadsheetDriver:
         )
         self.discord_id = discord_id
         self.division = division
+        self.qualifying_division = qualifying_division
         self.status = status
         self.reserve = reserve
+
+        self.reserve_division: Optional[int] = None

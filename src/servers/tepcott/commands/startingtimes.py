@@ -5,18 +5,15 @@ import pytz
 import re
 
 from servers.tepcott.spreadsheet import Spreadsheet
-from servers.tepcott.tepcott import STARTING_TIMES
+from servers.tepcott.tepcott import STARTING_TIMES, get_div_emojis
 
 
-async def startingtimes(ctx: discord.ApplicationContext, bot: Bot) -> None:
+def get_starting_times_string(
+    tepcott_guild: discord.Guild, bottom_division_number: int
+) -> str:
     """ """
-    interaction = await ctx.respond(
-        content="Hi there... I'm just figuring out how many divisions are active real quick. - KIFFLOM!"
-    )
 
-    div_emojis = [e for e in ctx.guild.emojis if re.match(r"D\d", e.name)]
-    div_emojis.sort(key=lambda e: e.name)
-    spreadsheet = Spreadsheet()
+    div_emojis = get_div_emojis(tepcott_guild)
 
     timezone = pytz.timezone("Europe/London")
     dt = datetime.now(timezone)
@@ -41,6 +38,26 @@ async def startingtimes(ctx: discord.ApplicationContext, bot: Bot) -> None:
         starting_time_utc = starting_time_utc.strftime("%H:%M UTC")
         # start time in UTC
 
-        starting_times_string += f"**{', '.join([f'{div_emojis[d-1]}' for d in divisions if d <= spreadsheet.bottom_division_number])}:** {starting_time_utc} **/** <t:{starting_time.timestamp():.0f}:t> local\n"
+        # join div emojis: utc / local
+        starting_times_string += f"**{', '.join([f'{div_emojis[d-1]}' for d in divisions if d <= bottom_division_number])}:** {starting_time_utc} **/** <t:{starting_time.timestamp():.0f}:t> local\n"
 
-    await interaction.edit_original_message(content=starting_times_string)
+    return starting_times_string
+
+
+async def startingtimes(ctx: discord.ApplicationContext, bot: Bot) -> None:
+    """ """
+    print(
+        f"{ctx.author.display_name} ({ctx.author.id}) from {ctx.guild.name} ({ctx.guild.id}) used ./{ctx.command.name}"
+    )
+
+    interaction = await ctx.respond(
+        content="Hi there... I'm just figuring out how many divisions are active real quick. - KIFFLOM!"
+    )
+    spreadsheet = Spreadsheet()
+
+    await interaction.edit_original_response(
+        content=get_starting_times_string(
+            tepcott_guild=ctx.guild,
+            bottom_division_number=spreadsheet.bottom_division_number,
+        )
+    )

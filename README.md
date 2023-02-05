@@ -4,11 +4,8 @@
     - [x] Also updates discord names to be `social_club (discord)`
 - [x] Display the predicted qualifying cutoffs for each division. `!cutoffs`
 - [x] Convert "everything" (updatedivs) to python for the sake of slash commands
-- [ ] Add slash commands for reserves. 
-    - [x] `/reserves needed` 
-    - [ ] `/reserve assign`
-    - [ ] `/reserve remove`
 - [x] Add slash command for starting orders. `/startingorder`
+- [x] Add automatic reserve assignment using an embed messsage.
 
 ## Libraries and Tools Used
 - [ChatGPT](https://openai.com/blog/chatgpt/): An AI model for natural language processing and text generation.
