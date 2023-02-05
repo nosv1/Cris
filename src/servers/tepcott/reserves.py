@@ -260,9 +260,7 @@ async def handle_reserve_available_reaction(
     else:
         reserves_division = int(reserve.division)
 
-    reserve_eligible_for_division = (
-        abs(reserve_division_number - reserves_division) >= 1
-    )
+    reserve_eligible_for_division = (reserves_division - reserve_division_number) >= -1
     if not reserve_eligible_for_division:
         print(
             f"{reserve_member.display_name} is not eligible for division {reserve_division_number}"
