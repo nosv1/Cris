@@ -85,6 +85,7 @@ async def handle_assignment_changes(
     div_emojis: list[discord.Emoji],
     old_assignments: Optional[list[SpreadsheetDriver]],
     new_assignments: list[SpreadsheetDriver],
+    reacter: Optional[discord.Member],
 ) -> None:
     """sends pings to div channels if a reserve is newly assigned or unassigned"""
 
@@ -108,6 +109,9 @@ async def handle_assignment_changes(
         no_change = reserve_id in new_reserves_by_reserve_id
         if no_change:
             continue
+        is_reacter = reacter is not None and reserve_id == reacter.id
+        if is_reacter:
+            continue
 
         division = int(driver.division)
         div_channel = div_channels[division - 1]
@@ -119,6 +123,9 @@ async def handle_assignment_changes(
     for reserve_id, driver in new_reserves_by_reserve_id.items():
         no_change = reserve_id in old_reserves_by_reserve_id
         if no_change:
+            continue
+        is_reacter = reacter is not None and reserve_id == reacter.id
+        if is_reacter:
             continue
 
         division = int(driver.division)
@@ -134,7 +141,7 @@ async def update_reserve_embed(
     spreadsheet: Optional[Spreadsheet] = None,
     drivers_by_discord_id: Optional[dict[int, SpreadsheetDriver]] = None,
     old_reserve_assignments: Optional[list[SpreadsheetDriver]] = None,
-    reserve_reaction: bool = True,
+    reacter: Optional[discord.Member] = None,
 ):
     """ """
 
@@ -153,14 +160,13 @@ async def update_reserve_embed(
     reserve_assignments, reserves_available_by_division = get_reserve_assignments(
         reserves_requests=reserve_requests, reserves_available=reserves_available
     )
-    if not reserve_reaction:
-        # we only ping if it wasn't a reserve that reacted
-        await handle_assignment_changes(
-            div_channels=get_div_channels(channels=msg.guild.text_channels),
-            div_emojis=get_div_emojis(guild=msg.guild),
-            old_assignments=old_reserve_assignments,
-            new_assignments=reserve_assignments,
-        )
+    await handle_assignment_changes(
+        div_channels=get_div_channels(channels=msg.guild.text_channels),
+        div_emojis=get_div_emojis(guild=msg.guild),
+        old_assignments=old_reserve_assignments,
+        new_assignments=reserve_assignments,
+        reacter=reacter,
+    )
 
     embed = msg.embeds[0]
     for field in embed.fields[:-1]:
@@ -245,7 +251,7 @@ async def handle_reserve_needed_reaction(
             database=bot.tepcott_database,
             drivers_by_discord_id=drivers_by_discord_id,
             old_reserve_assignments=old_reserve_assignments,
-            reserve_reaction=False,
+            reacter=driver_member,
         )
         spreadsheet.set_reserves(reserve_assignemnts + [driver])
         return
@@ -263,7 +269,7 @@ async def handle_reserve_needed_reaction(
         database=bot.tepcott_database,
         drivers_by_discord_id=drivers_by_discord_id,
         old_reserve_assignments=old_reserve_assignments,
-        reserve_reaction=False,
+        reacter=driver_member,
     )
     spreadsheet.set_reserves(reserve_assignemnts)
 
@@ -313,6 +319,7 @@ async def handle_reserve_available_reaction(
             spreadsheet=spreadsheet,
             drivers_by_discord_id=drivers_by_discord_id,
             old_reserve_assignments=old_reserve_assignments,
+            reacter=reserve_member,
         )
         spreadsheet.set_reserves(reserve_assignments)
         return
@@ -347,6 +354,7 @@ async def handle_reserve_available_reaction(
         spreadsheet=spreadsheet,
         drivers_by_discord_id=drivers_by_discord_id,
         old_reserve_assignments=old_reserve_assignments,
+        reacter=reserve_member,
     )
     spreadsheet.set_reserves(reserve_assignments)
 
