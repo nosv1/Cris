@@ -2,6 +2,7 @@ from Bot import Bot
 import discord
 
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
+from servers.tepcott.tepcott import get_div_emojis
 
 
 async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
@@ -50,11 +51,17 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
                 driver_needs_reserve = driver.reserve.social_club_name != ""
                 if driver_needs_reserve:
                     reserve_is_driver = driver.reserve.discord_id is not None
+                    reserve_in_division = driver.reserve.division.isnumeric()
                     if reserve_is_driver:
-                        driver_name = f"~~{driver_name}~~ [{driver.reserve.social_club_name}]({driver.reserve.social_club_link})"
+                        reserve_division_str = f"d{driver.reserve.interpreted_division}"
+                        if not reserve_in_division:
+                            reserve_division_str = f"r{reserve_division_str}"
+                        driver_name = f"~~{driver_name}~~ **>>** [({reserve_division_str}) {driver.reserve.social_club_name}]({driver.reserve.social_club_link})"
+                        # ~~driver~~ reserve
                     else:
                         driver_name = (
-                            f"~~{driver_name}~~ {driver.reserve.social_club_name}"
+                            f"~~{driver_name}~~ **>>** {driver.reserve.social_club_name}"
+                            # ~~driver~~ RESERVE NEEDED
                         )
                 embed.description += f"{position} {driver_name}\n"
 
@@ -62,14 +69,16 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
 
     spreadsheet = Spreadsheet()
     view: discord.ui.View = discord.ui.View()
+    div_emojis = get_div_emojis(guild=ctx.guild)
     for i in range(1, spreadsheet.bottom_division_number + 1):
         view.add_item(
             NumberButton(
                 ctx=ctx,
                 spreadsheet=spreadsheet,
                 number=i,
-                label=f"Division {i}",
-                style=discord.ButtonStyle.blurple,
+                # label=f"Division {i}",
+                emoji=div_emojis[i-1],
+                style=discord.ButtonStyle.gray,
             )
         )
 
