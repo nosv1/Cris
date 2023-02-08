@@ -16,6 +16,7 @@ from servers.tepcott.tepcott import (
     LIGHT_BLUE,
     RESERVE_NEEDED_STRING,
     SPACE_CHAR,
+    STARTING_TIMES,
     get_div_emojis,
     get_div_channels,
 )
@@ -65,17 +66,44 @@ def get_reserve_assignments(
     # reserve_assignments is a list of all reserves needed where .reserve is
     # either set as a reserve driver or reserve needed string
 
+    assignments_by_division: dict[int, set[int]] = {
+        division: set() for division in DIVISION_STARTING_TIMES
+    }
+    # assignments_by_division is a dict[division: list[reserve_id]]
+
     # assign reserves
     for driver in reserves_requests:
         driver_division = int(driver.division)
-        if driver_division not in reserves_available_by_division:
+        reserves_in_division = driver_division in reserves_available_by_division
+        reserves_available_in_division = (
+            reserves_in_division
+            and len(reserves_available_by_division[driver_division]) > 0
+        )
+
+        if not reserves_available_in_division:
             driver.reserve = SpreadsheetDriver(social_club_name=RESERVE_NEEDED_STRING)
             reserve_assignments.append(driver)
             continue
 
-        reserve = reserves_available_by_division[driver_division].pop(0)
-        driver.reserve = reserve
-        reserve_assignments.append(driver)
+        # find a reserve that isn't already reserving at the same time as division's race
+        for i, reserve in enumerate(reserves_available_by_division[driver_division]):
+            division_starting_time = DIVISION_STARTING_TIMES[driver_division]
+            divisions_at_start_time = STARTING_TIMES[division_starting_time]
+
+            is_reserving_at_time = False
+            for division in divisions_at_start_time:
+                is_reserving_at_time = (
+                    reserve.discord_id in assignments_by_division[division]
+                )
+                if is_reserving_at_time:
+                    break
+
+            if not is_reserving_at_time:
+                reserves_available_by_division[driver_division].pop(i)
+                driver.reserve = reserve
+                reserve_assignments.append(driver)
+                assignments_by_division[driver_division].add(reserve.discord_id)
+                break
 
     return reserve_assignments, reserves_available_by_division
 
