@@ -13,6 +13,7 @@ from servers.phyner.phyner import GUILD_ID as phyner_guild_id
 from servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
 
 from servers.tepcott.commands import updatedivs as tepcott_updatedivs
+from servers.tepcott.commands import reserve_needed as tepcott_reserve_needed
 from servers.tepcott.commands import startingorder as tepcott_startingorder
 from servers.tepcott.commands import startingtimes as tepcott_startingtimes
 
@@ -57,6 +58,11 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 
 ########################    COMMANDS    ########################
 
+tepcott_reserves_command_group = bot.create_group(
+    "reserve", "Commands for managing reserves.", guild_ids=[tepcott_guild_id]
+)
+
+
 ### /handbook ###
 @bot.slash_command(
     guild_ids=[tepcott_guild_id],
@@ -71,6 +77,25 @@ async def handbook(ctx: discord.ApplicationContext):
     await ctx.respond(
         "https://docs.google.com/document/d/1Hayw1pUfQq9RWy5mbGG33Yszq6RuuwX_nERtbyIb6Bs"
     )
+
+
+### /reserve needed ###
+@tepcott_reserves_command_group.command(
+    name="needed",
+    description="Sets a driver as needing a reserve.",
+)
+@option(
+    name="driver",
+    type=discord.Member,
+    description="The driver who needs a reserve.",
+)
+async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
+    """/reserve needed <@driver>"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_reserve_needed.reserve_needed(ctx, bot, driver)
 
 
 ### /startingorder ###

@@ -10,6 +10,7 @@ from servers.tepcott.tepcott import (
     LATE_JOINERS_AND_RESERVES_CHANNEL_ID,
     RESERVE_NEEDED_STRING,
 )
+from servers.tepcott.database import add_reserve_request
 
 
 async def reserve_needed(
@@ -25,7 +26,7 @@ async def reserve_needed(
     # offer to inform neighboring divisions
 
     author_is_not_admin = not ctx.author.guild_permissions.administrator
-    author_is_not_member = ctx.author.id != driver_member.id
+    author_is_not_member = ctx.author.id != driver_member.id or True  # OVERRIDING
     if author_is_not_member and author_is_not_admin:
         await ctx.respond(
             content="You do not have permission to use this command.",
@@ -103,16 +104,21 @@ async def reserve_needed(
                 )
             )
 
+            add_reserve_request(bot.tepcott_database, self.driver)
             await interaction.channel.send(
                 content=f"`{self.ctx.author.display_name}` marked `{self.driver_member.display_name}` as needing a reserve for Round {self.spreadsheet.round_number}.",
-                view=view,
             )
-            late_joiners_and_reserves_channel = await self.bot.fetch_channel(
-                LATE_JOINERS_AND_RESERVES_CHANNEL_ID
-            )
-            await late_joiners_and_reserves_channel.send(
-                f"`{self.ctx.author.display_name}` marked `{self.driver_member.display_name}` as needing a reserve for Round {self.spreadsheet.round_number}."
-            )
+
+            # await interaction.channel.send(
+            #     content=f"`{self.ctx.author.display_name}` marked `{self.driver_member.display_name}` as needing a reserve for Round {self.spreadsheet.round_number}.",
+            #     view=view,
+            # )
+            # late_joiners_and_reserves_channel = await self.bot.fetch_channel(
+            #     LATE_JOINERS_AND_RESERVES_CHANNEL_ID
+            # )
+            # await late_joiners_and_reserves_channel.send(
+            #     f"`{self.ctx.author.display_name}` marked `{self.driver_member.display_name}` as needing a reserve for Round {self.spreadsheet.round_number}."
+            # )
 
     class ReserveNeededCancelButton(discord.ui.Button):
         def __init__(self, **kwargs):
