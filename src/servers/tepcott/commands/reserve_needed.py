@@ -90,7 +90,7 @@ async def reserve_needed(
             )
 
             self.spreadsheet.set_reserves(drivers=[self.driver])
-            self.spreadsheet.add_reserve_request(self.driver.discord_id)
+            # self.spreadsheet.add_reserve_request(self.driver.discord_id)
 
             view = discord.ui.View()
             view.add_item(
