@@ -14,6 +14,8 @@ from servers.tepcott.database import (
 from servers.tepcott.tepcott import (
     DIVISION_STARTING_TIMES,
     LIGHT_BLUE,
+    RESERVES_CHANNEL_ID,
+    RESERVE_EMBED_MESSAGE_ID,
     RESERVE_NEEDED_STRING,
     SPACE_CHAR,
     STARTING_TIMES,
@@ -26,14 +28,20 @@ from typing import Optional
 
 
 def get_reserve_assignments(
-    reserves_requests: list[SpreadsheetDriver],
-    reserves_available: list[SpreadsheetDriver],
+    database: Database, drivers_by_discord_id: dict[int, SpreadsheetDriver]
 ) -> tuple[list[SpreadsheetDriver], dict[int, list[SpreadsheetDriver]]]:
     """returns a list of all reserve needed drivers with .reserve set as a
     reserve driver or reserve needed string and then the leftover available
     reserves by division
 
     reserve_assignments, reserves_available_by_division"""
+
+    reserve_requests = get_reserve_requests(
+        database=database, drivers_by_discord_id=drivers_by_discord_id
+    )
+    reserves_available = get_reserves_available(
+        database=database, drivers_by_discord_id=drivers_by_discord_id
+    )
 
     # these lists are still in order of driver saying they're available
     reserves_available_by_division: dict[int, list[SpreadsheetDriver]] = {}
@@ -72,7 +80,7 @@ def get_reserve_assignments(
     # assignments_by_division is a dict[division: list[reserve_id]]
 
     # assign reserves
-    for driver in reserves_requests:
+    for driver in reserve_requests:
         driver_division = int(driver.division)
         reserves_in_division = driver_division in reserves_available_by_division
         reserves_available_in_division = (
@@ -179,14 +187,9 @@ async def update_reserve_embed(
     if drivers_by_discord_id is None:
         _, drivers_by_discord_id = spreadsheet.get_roster_drivers()
 
-    reserve_requests = get_reserve_requests(
-        database=database, drivers_by_discord_id=drivers_by_discord_id
-    )
-    reserves_available = get_reserves_available(
-        database=database, drivers_by_discord_id=drivers_by_discord_id
-    )
     reserve_assignments, reserves_available_by_division = get_reserve_assignments(
-        reserves_requests=reserve_requests, reserves_available=reserves_available
+        database=database,
+        drivers_by_discord_id=drivers_by_discord_id,
     )
     await handle_assignment_changes(
         div_channels=get_div_channels(channels=msg.guild.text_channels),
@@ -239,6 +242,82 @@ async def update_reserve_embed(
     return reserve_assignments
 
 
+async def handle_reserve_needed_command(
+    ctx: discord.ApplicationContext,
+    bot: Bot,
+    driver_member: discord.Member,
+    remove_request: bool,
+):
+    """ """
+    print(
+        f"{driver_member.display_name} ({driver_member.id}) from {driver_member.guild.name} ({driver_member.guild.id}) {'removed' if remove_request else 'added'} reserve request"
+    )
+    interaction = await ctx.send_response("Processing...", ephemeral=True)
+
+    author_is_not_admin = not ctx.author.guild_permissions.administrator
+    author_is_not_member = ctx.author.id != driver_member.id or True  # OVERRIDING
+    if author_is_not_member and author_is_not_admin:
+        await interaction.response.edit_message(
+            content="You do not have permission to use this command."
+        )
+
+    reserves_channel = await ctx.guild.fetch_channel(RESERVES_CHANNEL_ID)
+    reserves_embed_msg = await reserves_channel.fetch_message(RESERVE_EMBED_MESSAGE_ID)
+
+    spreadsheet = Spreadsheet()
+    _, drivers_by_discord_id = spreadsheet.get_roster_drivers()
+
+    driver_in_roster = driver_member.id in drivers_by_discord_id
+    if not driver_in_roster:
+        interaction.send_respond
+        return
+
+    old_reserve_assignments, _ = get_reserve_assignments(
+        database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
+    )
+
+    driver = drivers_by_discord_id[driver_member.id]
+
+    if remove_request:
+        remove_reserve_request(database=bot.tepcott_database, driver=driver)
+        driver.reserve = SpreadsheetDriver(social_club_name="")
+        reserve_assignemnts = await update_reserve_embed(
+            msg=reserves_embed_msg,
+            spreadsheet=spreadsheet,
+            database=bot.tepcott_database,
+            drivers_by_discord_id=drivers_by_discord_id,
+            old_reserve_assignments=old_reserve_assignments,
+            reacter=driver_member,
+        )
+        spreadsheet.set_reserves(reserve_assignemnts + [driver])
+        await interaction.edit_original_response(
+            content=f"{driver_member.display_name} has been marked as not needing a reserve. {reserves_channel.mention}"
+        )
+        return
+
+    driver_in_division = driver.division.isnumeric()
+    if not driver_in_division:
+        print(f"{driver_member.display_name} is not in a division")
+        await interaction.edit_original_response(
+            content=f"{driver_member.display_name} is not in a division"
+        )
+        return
+
+    add_reserve_request(database=bot.tepcott_database, driver=driver)
+    reserve_assignemnts = await update_reserve_embed(
+        msg=reserves_embed_msg,
+        spreadsheet=spreadsheet,
+        database=bot.tepcott_database,
+        drivers_by_discord_id=drivers_by_discord_id,
+        old_reserve_assignments=old_reserve_assignments,
+        reacter=driver_member,
+    )
+    spreadsheet.set_reserves(reserve_assignemnts)
+    await interaction.edit_original_response(
+        content=f"{driver_member.display_name} has been marked as needing a reserve. {reserves_channel.mention}"
+    )
+
+
 async def handle_reserve_needed_reaction(
     payload: discord.RawReactionActionEvent,
     bot: Bot,
@@ -252,21 +331,16 @@ async def handle_reserve_needed_reaction(
 
     spreadsheet = Spreadsheet()
     _, drivers_by_discord_id = spreadsheet.get_roster_drivers()
-    old_reserves_needed = get_reserve_requests(
-        database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
-    )
-    old_reserves_available = get_reserves_available(
-        database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
-    )
-    old_reserve_assignments, _ = get_reserve_assignments(
-        reserves_requests=old_reserves_needed, reserves_available=old_reserves_available
-    )
 
     driver_in_roster = driver_member.id in drivers_by_discord_id
     if not driver_in_roster:
         print(f"{driver_member.display_name} is not in the roster")
         await msg.remove_reaction(payload.emoji, driver_member)
         return
+
+    old_reserve_assignments, _ = get_reserve_assignments(
+        database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
+    )
 
     driver = drivers_by_discord_id[driver_member.id]
 
@@ -315,20 +389,6 @@ async def handle_reserve_available_reaction(
 
     spreadsheet = Spreadsheet()
     _, drivers_by_discord_id = spreadsheet.get_roster_drivers()
-    old_reserves_needed = get_reserve_requests(
-        database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
-    )
-    old_reserves_available = get_reserves_available(
-        database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
-    )
-    old_reserve_assignments, _ = get_reserve_assignments(
-        reserves_requests=old_reserves_needed, reserves_available=old_reserves_available
-    )
-
-    div_emojis = get_div_emojis(guild=msg.guild)
-    reserve_division_number = [
-        i for i, e in enumerate(div_emojis) if e.name == payload.emoji.name
-    ][0] + 1
 
     reserve_in_roster = reserve_member.id in drivers_by_discord_id
     if not reserve_in_roster:
@@ -336,8 +396,16 @@ async def handle_reserve_available_reaction(
         await msg.remove_reaction(payload.emoji, reserve_member)
         return
 
+    old_reserve_assignments, _ = get_reserve_assignments(
+        database=bot.tepcott_database, drivers_by_discord_id=drivers_by_discord_id
+    )
+
+    div_emojis = get_div_emojis(guild=msg.guild)
+    reserve_division_number = [
+        i for i, e in enumerate(div_emojis) if e.name == payload.emoji.name
+    ][0] + 1
+
     reserve = drivers_by_discord_id[reserve_member.id]
-    reserve.reserve_division = reserve_division_number
 
     if not reaction_added:
         remove_reserve_available(database=bot.tepcott_database, reserve=reserve)
@@ -351,6 +419,7 @@ async def handle_reserve_available_reaction(
         )
         spreadsheet.set_reserves(reserve_assignments)
         return
+    reserve.reserve_division = reserve_division_number
 
     reserve_eligible_for_division = (
         reserve.interpreted_division - reserve_division_number

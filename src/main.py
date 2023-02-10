@@ -12,11 +12,14 @@ import os
 from servers.phyner.phyner import GUILD_ID as phyner_guild_id
 from servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
 
-from servers.tepcott.commands import vehicles as tepcott_vehicles
+from servers.tepcott.reserves import (
+    handle_reserve_needed_command as tepcott_handle_reserve_needed_command,
+)
 from servers.tepcott.commands import startingorder as tepcott_startingorder
 from servers.tepcott.commands import startingtimes as tepcott_startingtimes
 from servers.tepcott.commands import track as tepcott_track
 from servers.tepcott.commands import updatedivs as tepcott_updatedivs
+from servers.tepcott.commands import vehicles as tepcott_vehicles
 
 from dotenv import load_dotenv
 
@@ -107,23 +110,46 @@ async def handbook(ctx: discord.ApplicationContext):
     )
 
 
-### /reserve needed ###
-# @tepcott_reserves_command_group.command(
-#     name="needed",
-#     description="Sets a driver as needing a reserve.",
-# )
-# @option(
-#     name="driver",
-#     type=discord.Member,
-#     description="The driver who needs a reserve.",
-# )
-# async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
-#     """/reserve needed <@driver>"""
+## /reserve needed ###
+@tepcott_reserves_command_group.command(
+    name="needed",
+    description="Sets a driver as needing a reserve.",
+)
+@option(
+    name="driver",
+    type=discord.Member,
+    description="The driver who needs a reserve.",
+)
+async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
+    """/reserve needed <@driver>"""
 
-#     if bot.debug and not bot.is_developer(ctx.author):
-#         return
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
 
-#     await tepcott_reserve_needed.reserve_needed(ctx, bot, driver)
+    await tepcott_handle_reserve_needed_command(
+        ctx=ctx, bot=bot, driver_member=driver, remove_request=False
+    )
+
+
+### /reserve remove ###
+@tepcott_reserves_command_group.command(
+    name="remove",
+    description="Removes a driver from the list of drivers needing a reserve.",
+)
+@option(
+    name="driver",
+    type=discord.Member,
+    description="The driver who no longer needs a reserve.",
+)
+async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
+    """/reserve remove <@driver>"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_handle_reserve_needed_command(
+        ctx=ctx, bot=bot, driver_member=driver, remove_request=True
+    )
 
 
 ### /startingorder ###

@@ -9,7 +9,7 @@ from servers.tepcott.reserves import (
     reset_reserve_msg,
     update_reserve_embed,
 )
-from servers.tepcott.tepcott import RESERVE_MESSAGE_ID, get_cris_emoji
+from servers.tepcott.tepcott import RESERVE_EMBED_MESSAGE_ID, get_cris_emoji
 
 
 async def fetch_guild(payload: discord.RawReactionActionEvent, bot: Bot):
@@ -66,7 +66,7 @@ async def on_raw_reaction(
     if member.bot:
         return
 
-    is_reserve_message = payload.message_id == RESERVE_MESSAGE_ID
+    is_reserve_message = payload.message_id == RESERVE_EMBED_MESSAGE_ID
     member_is_admin = member.guild_permissions.administrator
 
     if is_reserve_message:
