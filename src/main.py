@@ -12,10 +12,11 @@ import os
 from servers.phyner.phyner import GUILD_ID as phyner_guild_id
 from servers.tepcott.tepcott import GUILD_ID as tepcott_guild_id
 
-from servers.tepcott.commands import updatedivs as tepcott_updatedivs
-from servers.tepcott.commands import reserve_needed as tepcott_reserve_needed
+from servers.tepcott.commands import vehicles as tepcott_vehicles
 from servers.tepcott.commands import startingorder as tepcott_startingorder
 from servers.tepcott.commands import startingtimes as tepcott_startingtimes
+from servers.tepcott.commands import track as tepcott_track
+from servers.tepcott.commands import updatedivs as tepcott_updatedivs
 
 from dotenv import load_dotenv
 
@@ -62,6 +63,33 @@ tepcott_reserves_command_group = bot.create_group(
     "reserve", "Commands for managing reserves.", guild_ids=[tepcott_guild_id]
 )
 
+### /vehicles ###
+@bot.slash_command(
+    guild_ids=[tepcott_guild_id],
+    description="Displays the vehicles for each division for the current round.",
+)
+async def vehicles(ctx: discord.ApplicationContext):
+    """/vehicles"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_vehicles.handle_vehicles_command(ctx)
+
+
+### /track ###
+@bot.slash_command(
+    guild_ids=[tepcott_guild_id],
+    description="Displays the track for the current round.",
+)
+async def track(ctx: discord.ApplicationContext):
+    """/track"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_track.handle_track_command(ctx)
+
 
 ### /handbook ###
 @bot.slash_command(
@@ -80,22 +108,22 @@ async def handbook(ctx: discord.ApplicationContext):
 
 
 ### /reserve needed ###
-@tepcott_reserves_command_group.command(
-    name="needed",
-    description="Sets a driver as needing a reserve.",
-)
-@option(
-    name="driver",
-    type=discord.Member,
-    description="The driver who needs a reserve.",
-)
-async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
-    """/reserve needed <@driver>"""
+# @tepcott_reserves_command_group.command(
+#     name="needed",
+#     description="Sets a driver as needing a reserve.",
+# )
+# @option(
+#     name="driver",
+#     type=discord.Member,
+#     description="The driver who needs a reserve.",
+# )
+# async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
+#     """/reserve needed <@driver>"""
 
-    if bot.debug and not bot.is_developer(ctx.author):
-        return
+#     if bot.debug and not bot.is_developer(ctx.author):
+#         return
 
-    await tepcott_reserve_needed.reserve_needed(ctx, bot, driver)
+#     await tepcott_reserve_needed.reserve_needed(ctx, bot, driver)
 
 
 ### /startingorder ###

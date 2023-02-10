@@ -86,6 +86,7 @@ ROSTER_QUALIFYING_DIVISIONS_NAMED_RANGE = "roster_qualifying_divisions"
 ROSTER_STATUS_NAMED_RANGE = "roster_statuses"
 
 MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE = "my_sheet_bottom_division"
+MY_SHEET_D1_CAR_RANGE_NAMED_RANGE = "my_sheet_d1_car_range"
 MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE = (
     "my_sheet_reserve_requests_discord_ids"
 )
@@ -102,6 +103,7 @@ MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE = (
 MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE = (
     "my_sheet_starting_order_reserves_range"
 )
+MY_SHEET_TRACK_RANGE_NAMED_RANGE = "my_sheet_track_range"
 
 #########   FUNCTIONS   #########
 

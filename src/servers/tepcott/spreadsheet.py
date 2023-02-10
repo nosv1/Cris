@@ -5,6 +5,7 @@ from typing import Optional
 
 from servers.tepcott.tepcott import (
     MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE,
+    MY_SHEET_D1_CAR_RANGE_NAMED_RANGE,
     MY_SHEET_NAME,
     MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE,
     MY_SHEET_RESERVE_REQUESTS_DIVISIONS_NAMED_RANGE,
@@ -14,6 +15,7 @@ from servers.tepcott.tepcott import (
     MY_SHEET_ROUND_TAB_DIVISION_OFFSET,
     MY_SHEET_STARTING_ORDER_DRIVERS_RANGE_NAMED_RANGE,
     MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE,
+    MY_SHEET_TRACK_RANGE_NAMED_RANGE,
     RESERVE_NEEDED_STRING,
     ROUND_TAB_PREFIX,
     ROSTER_DIVS_NAMED_RANGE,
@@ -59,6 +61,8 @@ class Spreadsheet:
         ]
 
         # these are just the A1:A notiation, not the full range used in requests
+        self._d1_car_range: Optional[str] = None
+        self._track_range: Optional[str] = None
         self._starting_order_drivers_range: Optional[str] = None
         self._starting_order_reserves_range: Optional[str] = None
         self._round_tab_division_offset: Optional[int] = None
@@ -564,6 +568,81 @@ class Spreadsheet:
             starting_orders[division_number].append(driver)
 
         return starting_orders
+
+    def get_track(self) -> SpreadsheetTrack:
+        track_range = self.get_single_column_value_ranges(
+            sheet=self._spreadsheet.worksheet(MY_SHEET_NAME),
+            ranges=[MY_SHEET_TRACK_RANGE_NAMED_RANGE],
+        )
+
+        round_tab = self._spreadsheet.worksheet(
+            f"{ROUND_TAB_PREFIX}{self.round_number}"
+        )
+
+        round_track = self.get_single_column_value_ranges(
+            sheet=round_tab, ranges=[track_range[0][0][0]]
+        )[0][0]
+
+        track = SpreadsheetTrack(name=round_track[0])
+
+        return track
+
+    def get_vehicles(self) -> list[SpreadsheetCar]:
+
+        self.set_round_tab_ranges()
+
+        round_tab = self._spreadsheet.worksheet(
+            f"{ROUND_TAB_PREFIX}{self.round_number}"
+        )
+
+        d1_car_range = self.get_single_column_value_ranges(
+            sheet=self._spreadsheet.worksheet(MY_SHEET_NAME),
+            ranges=[MY_SHEET_D1_CAR_RANGE_NAMED_RANGE],
+        )
+
+        d1_car_range_row = int(d1_car_range[0].range.split("!")[1].split(":")[0][1:])
+        d1_car_range_column = d1_car_range[0].range.split("!")[1].split(":")[0][0]
+        # this assumes column is one letter
+
+        car_ranges = []
+
+        for i in range(self._bottom_division_number):
+            car_ranges.append(
+                f"{d1_car_range_column}{d1_car_range_row + (i * self._round_tab_division_offset)}"
+            )
+
+        car_ranges = self.get_single_column_value_ranges(
+            sheet=round_tab, ranges=car_ranges
+        )
+
+        vehicles: list[SpreadsheetCar] = []
+        for car_range in car_ranges:
+            for car in car_range:
+                vehicles.append(SpreadsheetCar(name=car[0]))
+
+        return vehicles
+
+
+class SpreadsheetTrack:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    @property
+    def social_club_search_link(self) -> str:
+        return f"https://socialclub.rockstargames.com/jobs/{self.name.replace(' ', '%20')}?dateRange=any&missiontype=race&platform=pc&sort=likes&title=gtav"
+
+    @property
+    def gtalens_search_link(self) -> str:
+        return f"https://gtalens.com/?cat=comm&page=1&search={self.name.replace(' ', '%20')}&sort=searchscore&platforms=pc"
+
+
+class SpreadsheetCar:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    @property
+    def gtavehicles_search_link(self) -> str:
+        return f"https://gtavehicles.net/gta5?q={self.name.replace(' ', '%20')}"
 
 
 class SpreadsheetDriver:
