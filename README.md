@@ -2,7 +2,7 @@
 - [x] Read #submissions for qualifying submissions and post them to the spreadsheet.
 - [x] Automatically update division roles upon command. `/updatedivs`
     - [x] Also updates discord names to be `social_club (discord)`
-- ~~[x] Display the predicted qualifying cutoffs for each division. `/cutoffs`~~
+- [x] ~~Display the predicted qualifying cutoffs for each division. `/cutoffs`~~
 - [x] Convert "everything" (updatedivs) from Rust to Python for the sake of slash commands
 - [x] Add slash command for starting orders. `/startingorder`
 - [x] Add slash command for `/track` and `/vehicles`
