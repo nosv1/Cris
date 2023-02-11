@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import discord
 import os
+import pytz
 import re
 
 #########   DISCORD IDs   #########
@@ -23,6 +24,15 @@ DIVISION_ROLE_IDS: list[int] = [
     702192590560428173,
     702192621891747981,
     702192638341939240,
+]
+RESERVE_DIVISION_ROLE_IDS: list[int] = [
+    0,
+    1071453400312578220,
+    1071453549436874793,
+    1071453578625040445,
+    1071453604696838234,
+    1071453630806372462,
+    1071453670828417054,
 ]
 RACER_ROLE_ID = 450401326472495105
 RESERVE_ROLE_ID = 696070455194419280
@@ -88,6 +98,9 @@ ROSTER_STATUS_NAMED_RANGE = "roster_statuses"
 
 MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE = "my_sheet_bottom_division"
 MY_SHEET_D1_CAR_RANGE_NAMED_RANGE = "my_sheet_d1_car_range"
+MY_SHEET_D1_PIT_MARSHAL_D1_NAMED_RANGE = "my_sheet_d1_pit_marshal_1_range"
+MY_SHEET_D1_PIT_MARSHAL_D2_NAMED_RANGE = "my_sheet_d1_pit_marshal_2_range"
+MY_SHEET_D1_LAP_COUNT_PIT_WINDOW_NAMED_RANGE = "my_sheet_laps_pit_window_range"
 MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE = (
     "my_sheet_reserve_requests_discord_ids"
 )
@@ -128,6 +141,30 @@ def get_div_emojis(guild: discord.Guild) -> list[discord.Emoji]:
     div_emojis.sort(key=lambda e: e.name)
 
     return div_emojis
+
+
+def get_starting_time_timetamps() -> dict[int, int]:
+    """ """
+    timezone = pytz.timezone("Europe/London")
+    dt = datetime.now(timezone)
+
+    is_sunday_in_london = dt.weekday() == 6
+    if not is_sunday_in_london:
+        dt += timedelta(days=6 - dt.weekday())
+
+    starting_time_timestamps: dict[str, int] = {}
+    for division, starting_time in DIVISION_STARTING_TIMES.items():
+        starting_time = datetime.strptime(starting_time, "%H:%M")
+        starting_time = starting_time.replace(year=dt.year, month=dt.month, day=dt.day)
+        starting_time = timezone.localize(starting_time)
+        starting_time_timestamps[division] = int(starting_time.timestamp())
+
+    return starting_time_timestamps
+
+
+def get_roles(guild: discord.Guild, role_ids: list[int]) -> list[discord.Role]:
+    """ """
+    return [guild.get_role(role_id) for role_id in role_ids]
 
 
 async def format_discord_name(

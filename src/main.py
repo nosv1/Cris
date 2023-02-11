@@ -11,6 +11,7 @@ import os
 
 from servers.phyner.phyner import GUILD_ID as phyner_guild_id
 
+from servers.tepcott.commands import raceday as tepcott_raceday
 from servers.tepcott.commands import startingorder as tepcott_startingorder
 from servers.tepcott.commands import startingtimes as tepcott_startingtimes
 from servers.tepcott.commands import track as tepcott_track
@@ -135,10 +136,24 @@ async def qualifying(ctx: discord.ApplicationContext):
     await ctx.respond(embed=embed)
 
 
+### /raceday ###
+@bot.slash_command(
+    guild_ids=[tepcott_guild_id],
+    description="(ADMIN ONLY) Displays details specific to a division for the current round.",
+)
+async def raceday(ctx: discord.ApplicationContext):
+    """/raceday"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_raceday.handle_raceday_command(ctx=ctx, bot=bot)
+
+
 ## /reserve needed ###
 @tepcott_reserves_command_group.command(
     name="needed",
-    description="Sets a driver as needing a reserve.",
+    description="(ADMIN ONLY) Sets a driver as needing a reserve.",
 )
 @option(
     name="driver",
@@ -159,7 +174,7 @@ async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
 ### /reserve remove ###
 @tepcott_reserves_command_group.command(
     name="remove",
-    description="Removes a driver from the list of drivers needing a reserve.",
+    description="(ADMIN ONLY) Removes a driver from the list of drivers needing a reserve.",
 )
 @option(
     name="driver",

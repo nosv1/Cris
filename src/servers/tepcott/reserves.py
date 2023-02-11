@@ -17,10 +17,12 @@ from servers.tepcott.tepcott import (
     RESERVES_CHANNEL_ID,
     RESERVE_EMBED_MESSAGE_ID,
     RESERVE_NEEDED_STRING,
+    RESERVE_DIVISION_ROLE_IDS,
     SPACE_CHAR,
     STARTING_TIMES,
     get_div_emojis,
     get_div_channels,
+    get_roles,
 )
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 
@@ -117,6 +119,7 @@ def get_reserve_assignments(
 
 
 async def handle_assignment_changes(
+    guild: discord.Guild,
     div_channels: list[discord.TextChannel],
     div_emojis: list[discord.Emoji],
     old_assignments: Optional[list[SpreadsheetDriver]],
@@ -127,6 +130,8 @@ async def handle_assignment_changes(
 
     if old_assignments is None:
         return
+
+    reserve_roles = get_roles(guild=guild, role_ids=RESERVE_DIVISION_ROLE_IDS[1:])
 
     old_reserves_by_reserve_id: dict[int, SpreadsheetDriver] = {}  # reserve_id: driver
     for driver in old_assignments:
@@ -145,14 +150,18 @@ async def handle_assignment_changes(
         no_change = reserve_id in new_reserves_by_reserve_id
         if no_change:
             continue
+
+        division = int(driver.division)
+        div_channel = div_channels[division - 1]
+        reserve_member = await div_channel.guild.fetch_member(reserve_id)
+        await reserve_member.remove_roles(reserve_roles[division - 1])
+
         is_reacter = reacter is not None and reserve_id == reacter.id
         if is_reacter:
             continue
 
-        division = int(driver.division)
-        div_channel = div_channels[division - 1]
         await div_channel.send(
-            f"Hi, <@{reserve_id}>. For the moment, you have been unassigned as a {div_emojis[division-1]} reserve. You are still on the list, though - KIFFLOM!"
+            f"Hi, {reserve_member.mention}. For the moment, you have been unassigned as a {div_emojis[division-1]} reserve. You are still on the list, though - KIFFLOM!"
         )
 
     # checking if newly assigned
@@ -160,14 +169,18 @@ async def handle_assignment_changes(
         no_change = reserve_id in old_reserves_by_reserve_id
         if no_change:
             continue
+
+        division = int(driver.division)
+        div_channel = div_channels[division - 1]
+        reserve_member = await div_channel.guild.fetch_member(reserve_id)
+        await reserve_member.add_roles(reserve_roles[division - 1])
+
         is_reacter = reacter is not None and reserve_id == reacter.id
         if is_reacter:
             continue
 
-        division = int(driver.division)
-        div_channel = div_channels[division - 1]
         await div_channel.send(
-            f"Hey there, <@{reserve_id}>! You have been assigned as a {div_emojis[division-1]} reserve. You can use `/startingorder` to see who you're currently assigned to - KIFFLOM!"
+            f"Hey there, {reserve_member.mention}! You have been assigned as a {div_emojis[division-1]} reserve. You can use `/startingorder` to see who you're currently assigned to - KIFFLOM!"
         )
 
 
@@ -192,6 +205,7 @@ async def update_reserve_embed(
         drivers_by_discord_id=drivers_by_discord_id,
     )
     await handle_assignment_changes(
+        guild=msg.guild,
         div_channels=get_div_channels(channels=msg.guild.text_channels),
         div_emojis=get_div_emojis(guild=msg.guild),
         old_assignments=old_reserve_assignments,
@@ -476,6 +490,11 @@ async def reset_reserve_msg(msg: discord.Message):
 
     await clear_reserves_reactions(msg=msg)
     await add_reserves_reactions(msg=msg)
+
+    reserve_roles = get_roles(guild=msg.guild, role_ids=RESERVE_DIVISION_ROLE_IDS[1:])
+    for role in reserve_roles:
+        for member in role.members:
+            await member.remove_roles(role)
 
     embed = msg.embeds[0]
     embed.color = discord.Color(LIGHT_BLUE)

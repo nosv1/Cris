@@ -6,6 +6,9 @@ from typing import Optional
 from servers.tepcott.tepcott import (
     MY_SHEET_BOTTOM_DIVISION_NAMED_RANGE,
     MY_SHEET_D1_CAR_RANGE_NAMED_RANGE,
+    MY_SHEET_D1_PIT_MARSHAL_D1_NAMED_RANGE,
+    MY_SHEET_D1_PIT_MARSHAL_D2_NAMED_RANGE,
+    MY_SHEET_D1_LAP_COUNT_PIT_WINDOW_NAMED_RANGE,
     MY_SHEET_NAME,
     MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE,
     MY_SHEET_RESERVE_REQUESTS_DIVISIONS_NAMED_RANGE,
@@ -600,8 +603,8 @@ class Spreadsheet:
             ranges=[MY_SHEET_D1_CAR_RANGE_NAMED_RANGE],
         )
 
-        d1_car_range_row = int(d1_car_range[0].range.split("!")[1].split(":")[0][1:])
-        d1_car_range_column = d1_car_range[0].range.split("!")[1].split(":")[0][0]
+        d1_car_range_row = int(d1_car_range[0][0][0][1:])
+        d1_car_range_column = d1_car_range[0][0][0][0]
         # this assumes column is one letter
 
         car_ranges = []
@@ -621,6 +624,108 @@ class Spreadsheet:
                 vehicles.append(SpreadsheetCar(name=car[0]))
 
         return vehicles
+
+    def get_pit_marshals(self) -> list[tuple[SpreadsheetDriver]]:
+        """ """
+
+        self.set_round_tab_ranges()
+
+        round_tab = self._spreadsheet.worksheet(
+            f"{ROUND_TAB_PREFIX}{self.round_number}"
+        )
+
+        d1_pit_marshals_range = self.get_single_column_value_ranges(
+            sheet=self._spreadsheet.worksheet(MY_SHEET_NAME),
+            ranges=[
+                MY_SHEET_D1_PIT_MARSHAL_D1_NAMED_RANGE,
+                MY_SHEET_D1_PIT_MARSHAL_D2_NAMED_RANGE,
+            ],
+        )
+
+        d1_pit_marshal_1_range_row = int(d1_pit_marshals_range[0][0][0][1:])
+        d1_pit_marshal_1_range_column = d1_pit_marshals_range[0][0][0][0]
+        # this assumes column is one letter
+
+        d1_pit_marshal_2_range_row = int(d1_pit_marshals_range[1][0][0][1:])
+        d1_pit_marshal_2_range_column = d1_pit_marshals_range[1][0][0][0]
+        # this assumes column is one letter
+
+        pit_marshal_1_ranges = []
+        pit_marshal_2_ranges = []
+
+        for i in range(self._bottom_division_number):
+            pit_marshal_1_ranges.append(
+                f"{d1_pit_marshal_1_range_column}{d1_pit_marshal_1_range_row + (i * self._round_tab_division_offset)}"
+            )
+            pit_marshal_2_ranges.append(
+                f"{d1_pit_marshal_2_range_column}{d1_pit_marshal_2_range_row + (i * self._round_tab_division_offset)}"
+            )
+
+        pit_marshal_ranges = pit_marshal_1_ranges + pit_marshal_2_ranges
+        pit_marshal_ranges = self.get_single_column_value_ranges(
+            sheet=round_tab, ranges=pit_marshal_ranges
+        )
+        pit_marshal_ranges = zip(
+            pit_marshal_ranges[: len(pit_marshal_ranges) // 2],
+            pit_marshal_ranges[len(pit_marshal_ranges) // 2 :],
+        )
+
+        drivers_by_social_club_name, _ = self.get_roster_drivers()
+
+        pit_marshals: list[tuple[SpreadsheetDriver]] = []
+        for pit_marshal_range in pit_marshal_ranges:
+            div_pit_marshals = ()
+
+            for pit_marshal in pit_marshal_range:
+                pit_marshal_name = pit_marshal[0][0]
+                pit_marshal_present = pit_marshal_name != ""
+                if not pit_marshal_present:
+                    continue
+
+                div_pit_marshals += (drivers_by_social_club_name[pit_marshal_name],)
+
+            pit_marshals.append(div_pit_marshals)
+
+        return pit_marshals
+
+    def get_lap_counts_pit_widows(self) -> list[tuple[str, str]]:
+        """ """
+
+        self.set_round_tab_ranges()
+
+        round_tab = self._spreadsheet.worksheet(
+            f"{ROUND_TAB_PREFIX}{self.round_number}"
+        )
+
+        d1_lap_count_pit_window_range = self.get_single_column_value_ranges(
+            sheet=self._spreadsheet.worksheet(MY_SHEET_NAME),
+            ranges=[MY_SHEET_D1_LAP_COUNT_PIT_WINDOW_NAMED_RANGE],
+        )
+
+        d1_lap_count_pit_window_range_row = int(
+            d1_lap_count_pit_window_range[0][0][0][1:]
+        )
+        d1_lap_count_pit_window_range_column = d1_lap_count_pit_window_range[0][0][0][0]
+
+        lap_count_pit_window_ranges = []
+
+        for i in range(self._bottom_division_number):
+            lap_count_pit_window_ranges.append(
+                f"{d1_lap_count_pit_window_range_column}{d1_lap_count_pit_window_range_row + (i * self._round_tab_division_offset)}"
+            )
+
+        lap_count_pit_window_ranges = self.get_single_column_value_ranges(
+            sheet=round_tab, ranges=lap_count_pit_window_ranges
+        )
+
+        lap_counts_pit_windows: list[tuple[str, str]] = []
+        for lap_count_pit_widnow_range in lap_count_pit_window_ranges:
+            lap_count: str
+            pit_window: str
+            lap_count, pit_window = tuple(lap_count_pit_widnow_range[0][0].split("/"))
+            lap_counts_pit_windows.append((lap_count.strip(), pit_window.strip()))
+
+        return lap_counts_pit_windows
 
 
 class SpreadsheetTrack:
@@ -658,9 +763,6 @@ class SpreadsheetDriver:
         """ """
 
         self.social_club_name = social_club_name
-        self.social_club_link = (
-            f"https://socialclub.rockstargames.com/member/{social_club_name}"
-        )
         self.discord_id = discord_id
         self.division = division
         self.qualifying_division = qualifying_division
@@ -677,3 +779,7 @@ class SpreadsheetDriver:
             return int(self.qualifying_division)
         else:
             return -1
+
+    @property
+    def social_club_link(self) -> str:
+        return f"https://socialclub.rockstargames.com/member/{self.social_club_name}"
