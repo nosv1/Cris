@@ -36,7 +36,7 @@ async def create_raceday_embed(
     embed = discord.Embed()
     embed.color = LIGHT_BLUE
     embed.title = f"**{div_emoji} __Race Details__**"
-    content = f"`{div_role.mention} {reserve_div_role.mention} {' '.join(pm.mention for pm in pit_marshal_members)}`"
+    content = f"{div_role.mention} {reserve_div_role.mention} {' '.join(pm.mention for pm in pit_marshal_members)}"
     embed.description = (
         f"**Starting time:** <t:{starting_time_timestamp}:t> **|** <t:{starting_time_timestamp}:R>\n"
         f"**Track:** {track.name} [SC]({track.social_club_search_link}) **|** [GTALens]({track.gtalens_search_link})\n"
