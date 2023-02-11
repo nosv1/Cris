@@ -7,6 +7,8 @@
 - [x] Add slash command for starting orders. `/startingorder`
 - [x] Add slash command for `/track` and `/vehicles`
 - [x] Add automatic reserve assignment using an embed messsage.
+    - [x] Auto add/remove reserve roles on (un)assignment.
+- [x] Add slash command for `/raceday`.
 
 ## Libraries and Tools Used
 - [ChatGPT](https://openai.com/blog/chatgpt/): An AI model for natural language processing and text generation.
