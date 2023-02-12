@@ -10,6 +10,7 @@ from servers.tepcott.reserves import (
     update_reserve_embed,
 )
 from servers.tepcott.tepcott import RESERVE_EMBED_MESSAGE_ID, get_cris_emoji
+from servers.tepcott.spreadsheet import Spreadsheet
 
 
 async def fetch_guild(payload: discord.RawReactionActionEvent, bot: Bot):
@@ -122,7 +123,10 @@ async def on_raw_reaction(
             )
 
         elif is_counterclockwise_arrow_emoji and member_is_admin:
-            await update_reserve_embed(msg=msg, database=bot.tepcott_database)
+            reserve_assignments = await update_reserve_embed(
+                msg=msg, database=bot.tepcott_database
+            )
+            Spreadsheet().set_reserves(reserve_assignments)
             await msg.remove_reaction(payload.emoji, member)
 
         # end work
