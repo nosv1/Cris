@@ -217,7 +217,7 @@ async def startingtimes(ctx: discord.ApplicationContext):
     if bot.debug and not bot.is_developer(ctx.author):
         return
 
-    await tepcott_startingtimes.startingtimes(ctx, bot)
+    await tepcott_startingtimes.startingtimes(ctx)
 
 
 ### /updatedivs ###
