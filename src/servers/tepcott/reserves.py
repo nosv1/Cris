@@ -420,6 +420,7 @@ async def handle_reserve_available_reaction(
     ][0] + 1
 
     reserve = drivers_by_discord_id[reserve_member.id]
+    reserve.reserve_division = reserve_division_number
 
     if not reaction_added:
         remove_reserve_available(database=bot.tepcott_database, reserve=reserve)
@@ -433,7 +434,6 @@ async def handle_reserve_available_reaction(
         )
         spreadsheet.set_reserves(reserve_assignments)
         return
-    reserve.reserve_division = reserve_division_number
 
     reserve_eligible_for_division = (
         reserve.interpreted_division - reserve_division_number
