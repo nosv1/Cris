@@ -63,8 +63,7 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
         except discord.errors.NotFound:
             if driver_in_division or driver_is_reserve or driver_in_waiting_list:
                 await ctx.channel.send(
-                    content=f"{driver.social_club_name} does not exist in the guild anymore",
-                    ephemeral=True,
+                    content=f"{driver.social_club_name} does not exist in the guild anymore"
                 )
             continue
 
@@ -97,13 +96,11 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
                 except discord.errors.Forbidden:
                     await ctx.channel.send(
                         content=f"Not enough permissions to remove {role.name} from {driver_member.display_name}",
-                        ephemeral=True,
                     )
 
                 except discord.errors.HTTPException:
                     await ctx.channel.send(
                         content=f"HTTPException when removing {role.name} from {driver_member.display_name}",
-                        ephemeral=True,
                     )
 
         if not driver_in_division and not driver_in_waiting_list:
@@ -117,13 +114,11 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
             except discord.errors.Forbidden:
                 await ctx.channel.send(
                     content=f"Not enough permissions to remove {racer_role.name} from {driver_member.display_name}",
-                    ephemeral=True,
                 )
 
             except discord.errors.HTTPException:
                 await ctx.channel.send(
                     content=f"HTTPException when removing {racer_role.name} from {driver_member.display_name}",
-                    ephemeral=True,
                 )
             continue
 
@@ -183,24 +178,24 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
         "Let us begin the journey to enlightenment. Welcome, followers, to Division 5 - KIFFLOM!",
     ]
 
-    for div, channel in enumerate(division_channels):
-        if div == 0:
-            continue
+    # for div, channel in enumerate(division_channels):
+    #     if div == 0:
+    #         continue
 
-        promotion_message = f"**{division_welcome_messages[div]}**\n"
-        # demotion_message = f"**{division_welcome_messages[div]}**\n"
+    # promotion_message = f"**{division_welcome_messages[div]}**\n"
+    # demotion_message = f"**{division_welcome_messages[div]}**\n"
 
-        promotion_message += "\n".join(
-            [f" - {member.mention}" for member in promotions_by_division[div]]
-        )
-        # demotion_message += "\n".join(
-        #     [f" - {member.mention}" for member in demotions_by_division[div]]
-        # )
+    # promotion_message += "\n".join(
+    #     [f" - {member.mention}" for member in promotions_by_division[div]]
+    # )
+    # demotion_message += "\n".join(
+    #     [f" - {member.mention}" for member in demotions_by_division[div]]
+    # )
 
-        # if promotions_by_division[div] != []:
-        #     await channel.send(promotion_message)
-        # if demotions_by_division[div] != []:
-        #     await channel.send(demotion_message)
+    # if promotions_by_division[div] != []:
+    #     await channel.send(promotion_message)
+    # if demotions_by_division[div] != []:
+    #     await channel.send(demotion_message)
 
 
 async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
@@ -228,7 +223,7 @@ async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
             self.msg = await interaction.response.send_message(
                 content="Updating division roles..."
             )
-            await update_division_roles(self.ctx)
+            await update_division_roles(ctx=self.ctx, msg=self.msg)
             await self.msg.edit(content="Updated division roles")
 
     class CancelButton(discord.ui.Button):
