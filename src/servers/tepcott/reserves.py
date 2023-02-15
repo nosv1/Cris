@@ -283,7 +283,9 @@ async def handle_reserve_needed_command(
 
     driver_in_roster = driver_member.id in drivers_by_discord_id
     if not driver_in_roster:
-        interaction.send_respond
+        await interaction.edit_original_response(
+            content=f"{driver_member.display_name} is not in the roster."
+        )
         return
 
     old_reserve_assignments, _ = get_reserve_assignments(
