@@ -773,12 +773,10 @@ class SpreadsheetDriver:
 
     @property
     def interpreted_division(self) -> int:
-        if self.division.isnumeric():
-            return int(self.division)
-        elif self.qualifying_division.isnumeric():
-            return int(self.qualifying_division)
+        if self.division.isnumeric() and self.qualifying_division.isnumeric():
+            return min(int(self.division), int(self.qualifying_division))
         else:
-            return -1
+            return int(self.qualifying_division)
 
     @property
     def social_club_link(self) -> str:
