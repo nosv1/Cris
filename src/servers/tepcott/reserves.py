@@ -1,5 +1,6 @@
 from Bot import Bot
 from Database import Database
+from datetime import datetime, timedelta
 import discord
 
 from servers.tepcott.commands.startingtimes import get_starting_times_string
@@ -23,6 +24,7 @@ from servers.tepcott.tepcott import (
     get_div_emojis,
     get_div_channels,
     get_roles,
+    get_starting_time_timetamps,
 )
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 
@@ -515,12 +517,16 @@ async def reset_reserve_msg(msg: discord.Message):
         f"{get_starting_times_string(tepcott_guild=msg.guild, bottom_division_number=spreadsheet.bottom_division_number)}\n"
     )
 
+    starting_time_timestamps = get_starting_time_timetamps()
+    hour_before_first_races = datetime.fromtimestamp(
+        starting_time_timestamps[2]
+    ) - timedelta(hours=1)
     embed.description = (
-        "⠀• If you cannot race this round, click the 👋\n"
-        "⠀• If you want to reserve this round, click the division emoji(s)\n"
-        "⠀• Un-clicking will remove your request/availability.\n"
-        "⠀• Reserves will be pinged upon (un)assignment.\n"
-        "⠀• Channel closes an hour before the races.\n"
+        f"⠀• If you cannot race this round, click the 👋\n"
+        f"⠀• If you want to reserve this round, click the division emoji(s)\n"
+        f"⠀• Un-clicking will remove your request/availability.\n"
+        f"⠀• Reserves will be pinged upon (un)assignment.\n"
+        f"⠀• Channel closes an hour before the first races. <t:{int(hour_before_first_races.timestamp())}:R>"
         f"{SPACE_CHAR}"
     )
 
