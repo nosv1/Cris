@@ -224,7 +224,7 @@ async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
                 content="Updating division roles..."
             )
             await update_division_roles(ctx=self.ctx, msg=self.msg)
-            await self.msg.edit(content="Updated division roles")
+            await interaction.response.edit_message(content="Updated division roles", view=None)
 
     class CancelButton(discord.ui.Button):
         def __init__(self, **kwargs):
