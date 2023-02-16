@@ -185,7 +185,7 @@ async def update_division_roles(
             division_channel = division_channels[division_index]
             division_driver_pings = f"\n".join(
                 [
-                    f"{SPACE_CHAR * 2}`{d.mention}`"
+                    f"{SPACE_CHAR * 2}{d.mention}"
                     for d in sorted(
                         driver_members, key=lambda x: x.display_name.lower()
                     )
