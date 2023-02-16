@@ -8,13 +8,18 @@ from servers.tepcott.tepcott import (
     DIVISION_CHANNEL_IDS,
     DIVISION_ROLE_IDS,
     RACER_ROLE_ID,
+    SPACE_CHAR,
     format_discord_name,
 )
 
 from typing import Optional
 
 
-async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -> None:
+async def update_division_roles(
+    ctx: discord.ApplicationContext,
+    interaction: discord.Interaction,
+    ping_channels=False,
+):
     """ """
 
     spreadsheet = Spreadsheet()
@@ -30,6 +35,7 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
     demotions_by_division: list[list[Optional[Member]]] = [
         [] for _ in range(len(DIVISION_ROLE_IDS))
     ]
+    divisions: list[list[discord.Member]] = [[] for _ in range(len(DIVISION_ROLE_IDS))]
     # [0] is not used because division 0 is not a thing
 
     for role in ctx.guild.roles:
@@ -42,8 +48,8 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
 
     total_drivers = len(driver_by_social_club_name)
     for i, driver in enumerate(driver_by_social_club_name.values()):
-        if i + 1 % 10 == 0:
-            await msg.edit(
+        if (i + 1) % 10 == 0:
+            await interaction.edit_original_response(
                 content=f"Updating division roles... ({i+1}/{total_drivers})"
             )
         # looping spreadsheet drivers
@@ -168,40 +174,33 @@ async def update_division_roles(ctx: discord.ApplicationContext, msg: Message) -
                 )
                 continue
 
-    # TODO: HEY YOU THIS SHOULD ONLY BE HERE FOR PRE-ROUND 1, IT SHOULD CHANGE AFTER
-    division_welcome_messages = [
-        "",  # 0
-        "Division 1, the ultimate test of will and determination. Welcome, my fellow epsilonsist - KIFFLOM!",
-        "The time has come as we race towards ultimate understanding. Welcome, my friends, to Division 2 - KIFFLOM!"
-        "Come, let's find truth together. Welcome, my beloved believers in Kraff, to Division 3 - KIFFLOM!"
-        "The path to truth and glory begins here. Welcome, truth seekers, to Division 4 - KIFFLOM!",
-        "Let us begin the journey to enlightenment. Welcome, followers, to Division 5 - KIFFLOM!",
-    ]
+        if driver_in_division:
+            divisions[division_index].append(driver_member)
 
-    # for div, channel in enumerate(division_channels):
-    #     if div == 0:
-    #         continue
+    if ping_channels:
+        for division_index, driver_members in enumerate(divisions):
+            if not driver_members:
+                continue
 
-    # promotion_message = f"**{division_welcome_messages[div]}**\n"
-    # demotion_message = f"**{division_welcome_messages[div]}**\n"
-
-    # promotion_message += "\n".join(
-    #     [f" - {member.mention}" for member in promotions_by_division[div]]
-    # )
-    # demotion_message += "\n".join(
-    #     [f" - {member.mention}" for member in demotions_by_division[div]]
-    # )
-
-    # if promotions_by_division[div] != []:
-    #     await channel.send(promotion_message)
-    # if demotions_by_division[div] != []:
-    #     await channel.send(demotion_message)
+            division_channel = division_channels[division_index]
+            division_driver_pings = f"\n".join(
+                [
+                    f"{SPACE_CHAR * 2}`{d.mention}`"
+                    for d in sorted(
+                        driver_members, key=lambda x: x.display_name.lower()
+                    )
+                ]
+            )
+            await division_channel.send(
+                f"**I present to you the drivers of Division {division_index}!**"
+                f"\n{division_driver_pings}"
+            )
 
 
 async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
     """ """
     print(
-        f"{ctx.author.display_name} ({ctx.author.id}) from {ctx.guild.name} ({ctx.guild.id}) used ./{ctx.command.name}"
+        f"{ctx.author.display_name} ({ctx.author.id}) from {ctx.guild.name} ({ctx.guild.id}) used ./{ctx.command.name} in #{ctx.channel.name} ({ctx.channel.id})"
     )
 
     if not ctx.author.guild_permissions.administrator:
@@ -211,20 +210,25 @@ async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
         return
 
     class ConfirmButton(discord.ui.Button):
-        def __init__(self, ctx: discord.ApplicationContext, **kwargs):
+        def __init__(
+            self, ctx: discord.ApplicationContext, ping_channels=False, **kwargs
+        ):
             super().__init__(**kwargs)
 
             self.view: discord.ui.View
             self.ctx = ctx
+            self.ping_channels = ping_channels
             self.msg: Optional[Message] = None
 
         async def callback(self, interaction: discord.Interaction):
             self.view.disable_all_items()
-            self.msg = await interaction.response.send_message(
-                content="Updating division roles..."
+            await interaction.response.edit_message(
+                content="Updating division roles...", view=None
             )
-            await update_division_roles(ctx=self.ctx, msg=self.msg)
-            await interaction.response.edit_message(content="Updated division roles", view=None)
+            await update_division_roles(
+                ctx=self.ctx, interaction=interaction, ping_channels=self.ping_channels
+            )
+            await interaction.edit_original_response(content="Updated division roles")
 
     class CancelButton(discord.ui.Button):
         def __init__(self, **kwargs):
@@ -237,12 +241,21 @@ async def updatedivs(ctx: discord.ApplicationContext, bot: Bot) -> None:
             await interaction.response.edit_message(content="Cancelled", view=None)
 
     view = discord.ui.View()
-    view.add_item(ConfirmButton(ctx, label="Yes", style=discord.ButtonStyle.green))
+    view.add_item(
+        ConfirmButton(ctx, label="Yes (no pings)", style=discord.ButtonStyle.green)
+    )
+    view.add_item(
+        ConfirmButton(
+            ctx,
+            ping_channels=True,
+            label="Yes (with pings)",
+            style=discord.ButtonStyle.blurple,
+        )
+    )
     view.add_item(CancelButton(label="No", style=discord.ButtonStyle.red))
     await ctx.send_response(
         f"Update division roles for **Round {Spreadsheet().round_number}**?",
         view=view,
-        ephemeral=True,
     )
 
     # view: InitialView = InitialView(bot=bot)
