@@ -28,7 +28,7 @@ from servers.tepcott.tepcott import (
 )
 from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
 
-from typing import Optional
+from typing import Optional, Union
 
 
 def get_reserve_assignments(
@@ -261,7 +261,7 @@ async def update_reserve_embed(
 async def handle_reserve_needed_command(
     ctx: discord.ApplicationContext,
     bot: Bot,
-    driver_member: discord.Member | discord.User,
+    driver_member: Union[discord.Member, discord.User],
     remove_request: bool,
 ):
     """ """
