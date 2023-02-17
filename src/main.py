@@ -160,11 +160,27 @@ async def raceday(ctx: discord.ApplicationContext):
     type=discord.Member,
     description="The driver who needs a reserve.",
 )
-async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
+@option(
+    name="driver id",
+    type=int,
+    description="The driver who no longer needs a reserve.",
+)
+async def reserve(
+    ctx: discord.ApplicationContext,
+    driver: discord.Member = None,
+    driver_id: int = None,
+):
     """/reserve needed <@driver>"""
 
     if bot.debug and not bot.is_developer(ctx.author):
         return
+
+    if driver is None and driver_id is None:
+        await ctx.respond("You must provide a driver or driver id.")
+        return
+
+    if driver is None:
+        driver = await bot.fetch_user(driver_id)
 
     await tepcott_handle_reserve_needed_command(
         ctx=ctx, bot=bot, driver_member=driver, remove_request=False
@@ -181,11 +197,27 @@ async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
     type=discord.Member,
     description="The driver who no longer needs a reserve.",
 )
-async def reserve(ctx: discord.ApplicationContext, driver: discord.Member):
+@option(
+    name="driver id",
+    type=int,
+    description="The driver who no longer needs a reserve.",
+)
+async def reserve(
+    ctx: discord.ApplicationContext,
+    driver: discord.Member = None,
+    driver_id: int = None,
+):
     """/reserve remove <@driver>"""
 
     if bot.debug and not bot.is_developer(ctx.author):
         return
+
+    if driver is None and driver_id is None:
+        await ctx.respond("You must provide a driver or driver id.")
+        return
+
+    if driver is None:
+        driver = await bot.fetch_user(driver_id)
 
     await tepcott_handle_reserve_needed_command(
         ctx=ctx, bot=bot, driver_member=driver, remove_request=True
