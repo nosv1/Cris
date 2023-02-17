@@ -261,13 +261,18 @@ async def update_reserve_embed(
 async def handle_reserve_needed_command(
     ctx: discord.ApplicationContext,
     bot: Bot,
-    driver_member: discord.Member,
+    driver_member: discord.Member | discord.User,
     remove_request: bool,
 ):
     """ """
-    print(
-        f"{driver_member.display_name} ({driver_member.id}) from {driver_member.guild.name} ({driver_member.guild.id}) {'removed' if remove_request else 'added'} reserve request"
-    )
+    if isinstance(driver_member, discord.User):
+        print(
+            f"{driver_member.display_name} ({driver_member.id}) {'removed' if remove_request else 'added'} reserve request"
+        )
+    else:
+        print(
+            f"{driver_member.display_name} ({driver_member.id}) from {driver_member.guild.name} ({driver_member.guild.id}) {'removed' if remove_request else 'added'} reserve request"
+        )
     interaction = await ctx.send_response("Processing...", ephemeral=True)
 
     author_is_not_admin = not ctx.author.guild_permissions.administrator
