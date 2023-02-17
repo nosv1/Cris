@@ -22,6 +22,8 @@ async def handle_vehicles_command(ctx: discord.ApplicationContext) -> None:
 
     div_emojis = get_div_emojis(ctx.guild)
     for i, vehicle in enumerate(vehicles):
-        embed.description += f"{div_emojis[i]} **-** [{vehicle.name}]({vehicle.gtavehicles_search_link})\n"
+        embed.description += (
+            f"{div_emojis[i]} **-** [{vehicle.name}]({vehicle.gtacars_search_link})\n"
+        )
 
     await interaction.edit_original_response(content=None, embed=embed)

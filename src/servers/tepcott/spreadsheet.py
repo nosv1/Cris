@@ -746,8 +746,8 @@ class SpreadsheetCar:
         self.name = name
 
     @property
-    def gtavehicles_search_link(self) -> str:
-        return f"https://gtavehicles.net/gta5?q={self.name.replace(' ', '%20')}"
+    def gtacars_search_link(self) -> str:
+        return f"https://gtacars.net/gta5?q={self.name.replace(' ', '%20')}"
 
 
 class SpreadsheetDriver:

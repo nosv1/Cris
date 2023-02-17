@@ -40,7 +40,7 @@ async def create_raceday_embed(
     embed.description = (
         f"**Starting time:** <t:{starting_time_timestamp}:t> **|** <t:{starting_time_timestamp}:R>\n"
         f"**Track:** {track.name} [SC]({track.social_club_search_link}) **|** [GTALens]({track.gtalens_search_link})\n"
-        f"**Vehicle:** [{vehicle.name}]({vehicle.gtavehicles_search_link})\n"
+        f"**Vehicle:** [{vehicle.name}]({vehicle.gtacars_search_link})\n"
         f"**Laps:** {lap_count}\n"
         f"**Pit-window:** {pit_window}\n"
         f"**Pit-marshal(s):** {', '.join(f'[{pm.social_club_name}]({pm.social_club_link})' for pm in pit_marshals)}\n"
