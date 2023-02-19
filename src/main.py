@@ -15,7 +15,7 @@ load_dotenv()
 intents = discord.Intents.default()
 intents.message_content = True
 bot: Bot = Bot(debug=os.getenv("DEBUG").lower() == "true", intents=intents)
-bot.load_extension("servers.tepcott.SlashCommands")
+# bot.load_extension("servers.tepcott.SlashCommands")
 
 ########################    EVENT HANDLERS    ########################
 
