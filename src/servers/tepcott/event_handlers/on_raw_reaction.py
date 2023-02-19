@@ -139,24 +139,24 @@ async def on_raw_reaction(
         await msg.remove_reaction(cris_emoji, bot.user)
         return
 
-    if is_raceday_embed and reaction_added:
-        is_counterclockwise_arrow_emoji = payload.emoji.name == "🔄"
-        is_outbox_tray_emoji = payload.emoji.name == "📤"
+    # if is_raceday_embed and reaction_added:
+    #     is_counterclockwise_arrow_emoji = payload.emoji.name == "🔄"
+    #     is_outbox_tray_emoji = payload.emoji.name == "📤"
 
-        if not is_counterclockwise_arrow_emoji and not is_outbox_tray_emoji:
-            await msg.remove_reaction(payload.emoji, member)
-            return
+    #     if not is_counterclockwise_arrow_emoji and not is_outbox_tray_emoji:
+    #         await msg.remove_reaction(payload.emoji, member)
+    #         return
 
-        cris_emoji = get_cris_emoji(bot)
+    #     cris_emoji = get_cris_emoji(bot)
 
-        if is_counterclockwise_arrow_emoji:
-            await msg.add_reaction(cris_emoji)
-            await handle_raceday_refresh_reaction(msg=msg)
-            await msg.remove_reaction(cris_emoji, bot.user)
+    #     if is_counterclockwise_arrow_emoji:
+    #         await msg.add_reaction(cris_emoji)
+    #         await handle_raceday_refresh_reaction(msg=msg)
+    #         await msg.remove_reaction(cris_emoji, bot.user)
 
-        elif is_outbox_tray_emoji:
-            await msg.add_reaction(cris_emoji)
-            await handle_raceday_send_reaction(msg=msg)
-            await msg.remove_reaction(cris_emoji, bot.user)
+    #     elif is_outbox_tray_emoji:
+    #         await msg.add_reaction(cris_emoji)
+    #         await handle_raceday_send_reaction(msg=msg)
+    #         await msg.remove_reaction(cris_emoji, bot.user)
 
-        await msg.remove_reaction(payload.emoji, member)
+    #     await msg.remove_reaction(payload.emoji, member)
