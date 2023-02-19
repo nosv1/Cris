@@ -118,6 +118,7 @@ MY_SHEET_STARTING_ORDER_RESERVES_RANGE_NAMED_RANGE = (
     "my_sheet_starting_order_reserves_range"
 )
 MY_SHEET_TRACK_RANGE_NAMED_RANGE = "my_sheet_track_range"
+MY_SHEET_PIT_DEMO_NAMED_RANGE = "my_sheet_pit_demo_range"
 
 #########   FUNCTIONS   #########
 

@@ -3,6 +3,10 @@ from Bot import Bot
 import discord
 import re
 
+from servers.tepcott.commands.raceday import (
+    handle_raceday_refresh_reaction,
+    handle_raceday_send_reaction,
+)
 from servers.tepcott.reserves import (
     handle_reserve_available_reaction,
     handle_reserve_needed_reaction,
@@ -58,7 +62,7 @@ async def on_raw_reaction(
 
     guild = bot.get_guild(payload.guild_id)
     channel = guild.get_channel(payload.channel_id)
-    msg = channel.get_partial_message(payload.message_id)
+    msg = await fetch_message(payload, bot, channel)
     member = guild.get_member(payload.user_id)
 
     if not member:
@@ -67,13 +71,15 @@ async def on_raw_reaction(
     if member.bot:
         return
 
+    message_has_embed = len(msg.embeds) > 0
+    embed_has_title = message_has_embed and msg.embeds[0].title is not None
     is_reserve_message = payload.message_id == RESERVE_EMBED_MESSAGE_ID
+    is_raceday_embed = embed_has_title and msg.embeds[0].title.__contains__(
+        "Race Details"
+    )
     member_is_admin = member.guild_permissions.administrator
 
     if is_reserve_message:
-        if not isinstance(msg, discord.Message):
-            msg = await fetch_message(payload, bot, channel)
-
         is_wave_emoji = payload.emoji.name == "👋"
         is_div_emoji = re.match(r"D\d", payload.emoji.name)
         is_x_emoji = payload.emoji.name == "❌"
@@ -131,3 +137,26 @@ async def on_raw_reaction(
 
         # end work
         await msg.remove_reaction(cris_emoji, bot.user)
+        return
+
+    if is_raceday_embed and reaction_added:
+        is_counterclockwise_arrow_emoji = payload.emoji.name == "🔄"
+        is_outbox_tray_emoji = payload.emoji.name == "📤"
+
+        if not is_counterclockwise_arrow_emoji and not is_outbox_tray_emoji:
+            await msg.remove_reaction(payload.emoji, member)
+            return
+
+        cris_emoji = get_cris_emoji(bot)
+
+        if is_counterclockwise_arrow_emoji:
+            await msg.add_reaction(cris_emoji)
+            await handle_raceday_refresh_reaction(msg=msg)
+            await msg.remove_reaction(cris_emoji, bot.user)
+
+        elif is_outbox_tray_emoji:
+            await msg.add_reaction(cris_emoji)
+            await handle_raceday_send_reaction(msg=msg)
+            await msg.remove_reaction(cris_emoji, bot.user)
+
+        await msg.remove_reaction(payload.emoji, member)

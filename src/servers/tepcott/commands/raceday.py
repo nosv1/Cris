@@ -5,19 +5,31 @@ from servers.tepcott.tepcott import (
     DIVISION_ROLE_IDS,
     LIGHT_BLUE,
     RESERVE_DIVISION_ROLE_IDS,
+    SPACE_CHAR,
     get_div_emojis,
+    get_div_channels,
     get_roles,
     get_starting_time_timetamps,
 )
 
 
+def get_div_number_from_embed(embed: discord.Embed, guild: discord.Guild) -> int:
+    """ """
+
+    # title: <div emoji> __**Race Details**__
+    div_emoji = embed.title.split()[0]
+    div_emojis = get_div_emojis(guild=guild)
+    div_number = [i for i, e in enumerate(div_emojis) if str(e.id) in div_emoji][0] + 1
+
+    return div_number
+
+
 async def create_raceday_embed(
-    guild: discord.Guild,
-    spreadsheet: Spreadsheet,
-    division_number: int,
-    div_emoji: discord.Emoji,
+    guild: discord.Guild, spreadsheet: Spreadsheet, division_number: int
 ) -> tuple[str, discord.Embed]:
     """ """
+    div_emojis = get_div_emojis(guild=guild)
+    div_emoji = div_emojis[division_number - 1]
     track = spreadsheet.get_track()
     vehicle = spreadsheet.get_vehicles()[division_number - 1]
     starting_time_timestamp = get_starting_time_timetamps()[division_number]
@@ -44,6 +56,10 @@ async def create_raceday_embed(
         f"**Laps:** {lap_count}\n"
         f"**Pit-window:** {pit_window}\n"
         f"**Pit-marshal(s):** {', '.join(f'[{pm.social_club_name}]({pm.social_club_link})' for pm in pit_marshals)}\n"
+        f"\n"
+        f"**•** Add your pit marshal(s)\n"
+        f"**•** Know the pit route `/pits`\n"
+        f"**•** Know your start position `/startingorder`"
     )
     embed.set_footer(
         text="Be in the voice chat and ready to receive an invite 15 minutes before starting time."
@@ -64,7 +80,7 @@ async def handle_raceday_command(ctx: discord.ApplicationContext, bot: Bot) -> N
         return
 
     interaction = await ctx.send_response(
-        f"Happy race day! I'm just checking how many divisions are racing today - KIFFLOM!"
+        f"Happy race day! I'm just checking how many divisions are racing today - KIFFLOM!",
     )
 
     class DivisionNumberButton(discord.ui.Button):
@@ -86,9 +102,13 @@ async def handle_raceday_command(ctx: discord.ApplicationContext, bot: Bot) -> N
                 guild=ctx.guild,
                 spreadsheet=self.spreadsheet,
                 division_number=self.division_number,
-                div_emoji=self.emoji,
             )
-            await interaction.message.edit(content=content, embed=embed)
+
+            msg = await interaction.edit_original_response(
+                content=content, embed=embed, view=None
+            )
+            await msg.add_reaction("🔄")
+            await msg.add_reaction("📤")
 
     spreadsheet = Spreadsheet()
     view = discord.ui.View()
@@ -106,4 +126,29 @@ async def handle_raceday_command(ctx: discord.ApplicationContext, bot: Bot) -> N
     await interaction.edit_original_response(
         content="Which division's details would you like to see?",
         view=view,
+    )
+
+
+async def handle_raceday_refresh_reaction(msg: discord.Message) -> None:
+    """ """
+
+    division_number = get_div_number_from_embed(embed=msg.embeds[0], guild=msg.guild)
+
+    content, embed = await create_raceday_embed(
+        guild=msg.guild, spreadsheet=Spreadsheet(), division_number=division_number
+    )
+
+    await msg.edit(content=content, embed=embed)
+
+
+async def handle_raceday_send_reaction(msg: discord.Message) -> None:
+
+    division_number = get_div_number_from_embed(embed=msg.embeds[0], guild=msg.guild)
+    div_channels = get_div_channels(channels=msg.guild.text_channels)
+
+    div_channel = div_channels[division_number - 1]
+
+    await div_channel.send(
+        content=f"{msg.content}",
+        embed=msg.embeds[0],
     )

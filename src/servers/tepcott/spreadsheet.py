@@ -10,6 +10,7 @@ from servers.tepcott.tepcott import (
     MY_SHEET_D1_PIT_MARSHAL_D2_NAMED_RANGE,
     MY_SHEET_D1_LAP_COUNT_PIT_WINDOW_NAMED_RANGE,
     MY_SHEET_NAME,
+    MY_SHEET_PIT_DEMO_NAMED_RANGE,
     MY_SHEET_RESERVE_REQUESTS_DISCORD_IDS_NAMED_RANGE,
     MY_SHEET_RESERVE_REQUESTS_DIVISIONS_NAMED_RANGE,
     MY_SHEET_RESERVE_REQUESTS_RESERVES_NAMED_RANGE,
@@ -726,6 +727,27 @@ class Spreadsheet:
             lap_counts_pit_windows.append((lap_count.strip(), pit_window.strip()))
 
         return lap_counts_pit_windows
+
+    def get_pit_demo_link(self) -> str:
+        pit_demo_range = self.get_single_column_value_ranges(
+            sheet=self._spreadsheet.worksheet(MY_SHEET_NAME),
+            ranges=[MY_SHEET_PIT_DEMO_NAMED_RANGE],
+        )
+
+        round_tab = self._spreadsheet.worksheet(
+            f"{ROUND_TAB_PREFIX}{self.round_number}"
+        )
+
+        pit_demo = self.get_single_column_value_ranges(
+            sheet=round_tab,
+            ranges=[pit_demo_range[0][0][0]],
+            value_render_option="FORMULA",
+        )
+
+        # =HYPERLINK("https://gfycat.com/smallslushyankole","Pit Demo")
+        pit_demo_link = pit_demo[0][0][0].split('"')[1]
+
+        return pit_demo_link
 
 
 class SpreadsheetTrack:

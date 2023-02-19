@@ -11,6 +11,7 @@ import os
 
 from servers.phyner.phyner import GUILD_ID as phyner_guild_id
 
+from servers.tepcott.commands import pits as tepcott_pits
 from servers.tepcott.commands import raceday as tepcott_raceday
 from servers.tepcott.commands import startingorder as tepcott_startingorder
 from servers.tepcott.commands import startingtimes as tepcott_startingtimes
@@ -111,6 +112,20 @@ async def handbook(ctx: discord.ApplicationContext):
     await ctx.respond(
         "https://docs.google.com/document/d/1Hayw1pUfQq9RWy5mbGG33Yszq6RuuwX_nERtbyIb6Bs"
     )
+
+
+### /pits ###
+@bot.slash_command(
+    guild_ids=[tepcott_guild_id],
+    description="Shows the pit demo and rules",
+)
+async def pits(ctx: discord.ApplicationContext):
+    """/pits"""
+
+    if bot.debug and not bot.is_developer(ctx.author):
+        return
+
+    await tepcott_pits.handle_pits_command(ctx)
 
 
 ### /qualifying ###

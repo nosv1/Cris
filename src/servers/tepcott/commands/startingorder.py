@@ -65,7 +65,10 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
                         )
                 embed.description += f"{position} {driver_name}\n"
 
-            await interaction.message.edit(content=None, embed=embed)
+            await interaction.message.edit(
+                content="*Reserves from faster divisions start at the back in the same order and in front of new WL drivers.*",
+                embed=embed,
+            )
 
     spreadsheet = Spreadsheet()
     view: discord.ui.View = discord.ui.View()
@@ -77,7 +80,7 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
                 spreadsheet=spreadsheet,
                 number=i,
                 # label=f"Division {i}",
-                emoji=div_emojis[i-1],
+                emoji=div_emojis[i - 1],
                 style=discord.ButtonStyle.gray,
             )
         )
