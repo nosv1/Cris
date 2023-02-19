@@ -1,11 +1,10 @@
 from Bot import Bot
 import discord
-from servers.tepcott.spreadsheet import Spreadsheet, SpreadsheetDriver
+from servers.tepcott.spreadsheet import Spreadsheet
 from servers.tepcott.tepcott import (
     DIVISION_ROLE_IDS,
     LIGHT_BLUE,
     RESERVE_DIVISION_ROLE_IDS,
-    SPACE_CHAR,
     get_div_emojis,
     get_div_channels,
     get_roles,
