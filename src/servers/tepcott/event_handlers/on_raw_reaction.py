@@ -79,65 +79,65 @@ async def on_raw_reaction(
     )
     member_is_admin = member.guild_permissions.administrator
 
-    # if is_reserve_message:
-    #     is_wave_emoji = payload.emoji.name == "👋"
-    #     is_div_emoji = re.match(r"D\d", payload.emoji.name)
-    #     is_x_emoji = payload.emoji.name == "❌"
-    #     is_counterclockwise_arrow_emoji = payload.emoji.name == "🔄"
+    if is_reserve_message:
+        is_wave_emoji = payload.emoji.name == "👋"
+        is_div_emoji = re.match(r"D\d", payload.emoji.name)
+        is_x_emoji = payload.emoji.name == "❌"
+        is_counterclockwise_arrow_emoji = payload.emoji.name == "🔄"
 
-    #     if is_x_emoji and member_is_admin:
-    #         await reset_reserve_msg(msg)
-    #         return
+        if is_x_emoji and member_is_admin:
+            await reset_reserve_msg(msg)
+            return
 
-    #     cris_emoji = get_cris_emoji(bot)
+        cris_emoji = get_cris_emoji(bot)
 
-    #     # little checker to see if cris is busy doing things
-    #     # if cris is busy wait a bit then check again
-    #     # wait a max of 30 seconds until giving up
-    #     count = 0
-    #     while True:
-    #         if cris_emoji not in [r.emoji for r in msg.reactions]:
-    #             break
+        # little checker to see if cris is busy doing things
+        # if cris is busy wait a bit then check again
+        # wait a max of 30 seconds until giving up
+        count = 0
+        while True:
+            if cris_emoji not in [r.emoji for r in msg.reactions]:
+                break
 
-    #         await asyncio.sleep(3)
-    #         msg = await fetch_message(payload, bot, channel)
+            await asyncio.sleep(3)
+            msg = await fetch_message(payload, bot, channel)
 
-    #         if count > 10:
-    #             if reaction_added:
-    #                 await msg.remove_reaction(payload.emoji, member)
-    #             return
+            if count > 10:
+                if reaction_added:
+                    await msg.remove_reaction(payload.emoji, member)
+                return
 
-    #     # start work
-    #     await msg.add_reaction(cris_emoji)
+        # start work
+        await msg.add_reaction(cris_emoji)
 
-    #     if is_wave_emoji:
-    #         await handle_reserve_needed_reaction(
-    #             payload=payload,
-    #             bot=bot,
-    #             msg=msg,
-    #             driver_member=member,
-    #             reaction_added=reaction_added,
-    #         )
+        if is_wave_emoji:
+            await handle_reserve_needed_reaction(
+                payload=payload,
+                bot=bot,
+                msg=msg,
+                driver_member=member,
+                reaction_added=reaction_added,
+            )
 
-    #     elif is_div_emoji:
-    #         await handle_reserve_available_reaction(
-    #             payload=payload,
-    #             bot=bot,
-    #             msg=msg,
-    #             reserve_member=member,
-    #             reaction_added=reaction_added,
-    #         )
+        elif is_div_emoji:
+            await handle_reserve_available_reaction(
+                payload=payload,
+                bot=bot,
+                msg=msg,
+                reserve_member=member,
+                reaction_added=reaction_added,
+            )
 
-    #     elif is_counterclockwise_arrow_emoji and member_is_admin:
-    #         reserve_assignments = await update_reserve_embed(
-    #             msg=msg, database=bot.tepcott_database
-    #         )
-    #         Spreadsheet().set_reserves(reserve_assignments)
-    #         await msg.remove_reaction(payload.emoji, member)
+        elif is_counterclockwise_arrow_emoji and member_is_admin:
+            reserve_assignments = await update_reserve_embed(
+                msg=msg, database=bot.tepcott_database
+            )
+            Spreadsheet().set_reserves(reserve_assignments)
+            await msg.remove_reaction(payload.emoji, member)
 
-    #     # end work
-    #     await msg.remove_reaction(cris_emoji, bot.user)
-    #     return
+        # end work
+        await msg.remove_reaction(cris_emoji, bot.user)
+        return
 
     if is_raceday_embed and reaction_added:
         is_counterclockwise_arrow_emoji = payload.emoji.name == "🔄"

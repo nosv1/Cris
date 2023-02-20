@@ -14,7 +14,7 @@ load_dotenv()
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot: Bot = Bot(debug=os.getenv("DEBUG").lower() == "true")
+bot: Bot = Bot(debug=os.getenv("DEBUG").lower() == "true", intents=intents)
 bot.load_extension("servers.tepcott.SlashCommands")
 
 ########################    EVENT HANDLERS    ########################
@@ -53,6 +53,6 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 
 if __name__ == "__main__":
     # token: str = os.getenv("PROTO_DISCORD_TOKEN")
-    # token: str = os.getenv("CRIS_DISCORD_TOKEN")
-    token: str = os.getenv("MOBOT_DISCORD_TOKEN")
+    token: str = os.getenv("CRIS_DISCORD_TOKEN")
+    # token: str = os.getenv("MOBOT_DISCORD_TOKEN")
     bot.run(token)
