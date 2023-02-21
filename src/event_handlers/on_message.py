@@ -15,3 +15,6 @@ async def on_message(bot: Bot, message: discord.Message):
             # await message.channel.send(embed=embed)
 
             pass
+
+        elif message.content.startswith("..reload"):
+            bot.reload_extension("servers.tepcott.SlashCommands")
