@@ -17,6 +17,7 @@ from servers.tepcott.tepcott import (
     LIGHT_BLUE,
     RESERVES_CHANNEL_ID,
     RESERVE_EMBED_MESSAGE_ID,
+    RESERVE_LOG_CHANNEL_ID,
     RESERVE_NEEDED_STRING,
     RESERVE_DIVISION_ROLE_IDS,
     SPACE_CHAR,
@@ -122,13 +123,14 @@ def get_reserve_assignments(
 
 async def handle_assignment_changes(
     guild: discord.Guild,
+    reserve_log: discord.TextChannel,
     div_channels: list[discord.TextChannel],
     div_emojis: list[discord.Emoji],
     old_assignments: Optional[list[SpreadsheetDriver]],
     new_assignments: list[SpreadsheetDriver],
     reacter: Optional[discord.Member],
 ) -> None:
-    """sends pings to div channels if a reserve is newly assigned or unassigned"""
+    """sends pings to div channels and reserve log if a reserve is newly assigned or unassigned"""
 
     if old_assignments is None:
         return
@@ -158,6 +160,10 @@ async def handle_assignment_changes(
         reserve_member = await div_channel.guild.fetch_member(reserve_id)
         await reserve_member.remove_roles(reserve_roles[division - 1])
 
+        await reserve_log.send(
+            f"{reserve_member.mention} is no longer assigned a {div_emojis[division-1]} reserve - was assigned to {driver.social_club_name}"
+        )
+
         is_reacter = reacter is not None and reserve_id == reacter.id
         if is_reacter:
             continue
@@ -169,7 +175,11 @@ async def handle_assignment_changes(
     # checking if newly assigned
     for reserve_id, driver in new_reserves_by_reserve_id.items():
         no_change = reserve_id in old_reserves_by_reserve_id
-        if no_change:
+        different_driver = (
+            no_change
+            and driver.discord_id != old_reserves_by_reserve_id[reserve_id].discord_id
+        )
+        if no_change and not different_driver:
             continue
 
         division = int(driver.division)
@@ -177,8 +187,18 @@ async def handle_assignment_changes(
         reserve_member = await div_channel.guild.fetch_member(reserve_id)
         await reserve_member.add_roles(reserve_roles[division - 1])
 
+        if different_driver:
+            await reserve_log.send(
+                f"{reserve_member.mention} is no longer assigned to {old_reserves_by_reserve_id[reserve_id].social_club_name}, but is now assigned to {driver.social_club_name} - {div_emojis[division-1]}"
+            )
+
+        else:
+            await reserve_log.send(
+                f"{reserve_member.mention} has been assigned to {driver.social_club_name} - {div_emojis[division-1]}"
+            )
+
         is_reacter = reacter is not None and reserve_id == reacter.id
-        if is_reacter:
+        if no_change or is_reacter:
             continue
 
         await div_channel.send(
@@ -189,12 +209,16 @@ async def handle_assignment_changes(
 async def update_reserve_embed(
     msg: discord.Message,
     database: Database,
+    reserve_log: Optional[discord.TextChannel] = None,
     spreadsheet: Optional[Spreadsheet] = None,
     drivers_by_discord_id: Optional[dict[int, SpreadsheetDriver]] = None,
     old_reserve_assignments: Optional[list[SpreadsheetDriver]] = None,
     reacter: Optional[discord.Member] = None,
 ):
     """ """
+
+    if reserve_log is None:
+        reserve_log = await msg.guild.fetch_channel(RESERVE_LOG_CHANNEL_ID)
 
     if spreadsheet is None:
         spreadsheet = Spreadsheet()
@@ -208,6 +232,7 @@ async def update_reserve_embed(
     )
     await handle_assignment_changes(
         guild=msg.guild,
+        reserve_log=reserve_log,
         div_channels=get_div_channels(channels=msg.guild.text_channels),
         div_emojis=get_div_emojis(guild=msg.guild),
         old_assignments=old_reserve_assignments,
@@ -282,9 +307,6 @@ async def handle_reserve_needed_command(
             content="You do not have permission to use this command."
         )
 
-    reserves_channel = await ctx.guild.fetch_channel(RESERVES_CHANNEL_ID)
-    reserves_embed_msg = await reserves_channel.fetch_message(RESERVE_EMBED_MESSAGE_ID)
-
     spreadsheet = Spreadsheet()
     _, drivers_by_discord_id = spreadsheet.get_roster_drivers()
 
@@ -301,8 +323,16 @@ async def handle_reserve_needed_command(
 
     driver = drivers_by_discord_id[driver_member.id]
 
+    reserve_log_channel = await ctx.guild.fetch_channel(RESERVE_LOG_CHANNEL_ID)
+    reserves_channel = await ctx.guild.fetch_channel(RESERVES_CHANNEL_ID)
+    reserves_embed_msg = await reserves_channel.fetch_message(RESERVE_EMBED_MESSAGE_ID)
+    div_emojis = get_div_emojis(guild=ctx.guild)
+
     if remove_request:
         remove_reserve_request(database=bot.tepcott_database, driver=driver)
+        await reserve_log_channel.send(
+            f"{driver_member.mention} does not need a reserve in {div_emojis[int(driver.division) - 1]}."
+        )
         driver.reserve = SpreadsheetDriver(social_club_name="")
         reserve_assignemnts = await update_reserve_embed(
             msg=reserves_embed_msg,
@@ -327,6 +357,9 @@ async def handle_reserve_needed_command(
         return
 
     add_reserve_request(database=bot.tepcott_database, driver=driver)
+    await reserve_log_channel.send(
+        f"{driver_member.mention} needs a reserve in {div_emojis[int(driver.division) - 1]}."
+    )
     reserve_assignemnts = await update_reserve_embed(
         msg=reserves_embed_msg,
         spreadsheet=spreadsheet,
@@ -367,8 +400,14 @@ async def handle_reserve_needed_reaction(
 
     driver = drivers_by_discord_id[driver_member.id]
 
+    reserve_log_channel = await msg.guild.fetch_channel(RESERVE_LOG_CHANNEL_ID)
+    div_emojis = get_div_emojis(guild=msg.guild)
+
     if not reaction_added:
         remove_reserve_request(database=bot.tepcott_database, driver=driver)
+        await reserve_log_channel.send(
+            f"{driver_member.mention} no longer needs a reserve in {div_emojis[int(driver.division) - 1]}"
+        )
         driver.reserve = SpreadsheetDriver(social_club_name="")
         reserve_assignemnts = await update_reserve_embed(
             msg=msg,
@@ -388,6 +427,9 @@ async def handle_reserve_needed_reaction(
         return
 
     add_reserve_request(database=bot.tepcott_database, driver=driver)
+    await reserve_log_channel.send(
+        f"{driver_member.mention} needs a reserve in {div_emojis[int(driver.division - 1)]}"
+    )
     reserve_assignemnts = await update_reserve_embed(
         msg=msg,
         spreadsheet=spreadsheet,
@@ -431,8 +473,13 @@ async def handle_reserve_available_reaction(
     reserve = drivers_by_discord_id[reserve_member.id]
     reserve.reserve_division = reserve_division_number
 
+    reserve_log_channel = await msg.guild.fetch_channel(RESERVE_LOG_CHANNEL_ID)
+
     if not reaction_added:
         remove_reserve_available(database=bot.tepcott_database, reserve=reserve)
+        await reserve_log_channel.send(
+            f"{reserve_member.mention} is not available to reserve for {payload.emoji}"
+        )
         reserve_assignments = await update_reserve_embed(
             msg=msg,
             database=bot.tepcott_database,
@@ -468,6 +515,9 @@ async def handle_reserve_available_reaction(
             return
 
     add_reserve_available(database=bot.tepcott_database, reserve=reserve)
+    await reserve_log_channel.send(
+        f"{reserve_member.mention} is available to reserve for {payload.emoji}"
+    )
     reserve_assignments = await update_reserve_embed(
         msg=msg,
         database=bot.tepcott_database,
