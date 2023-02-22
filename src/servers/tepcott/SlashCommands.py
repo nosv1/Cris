@@ -96,7 +96,7 @@ class SlashCommands(commands.Cog):
         embed.description = (
             f"**Track:** [Vinewood Spirit](https://socialclub.rockstargames.com/job/gtav/nrNVvKm69EeSprSROo7nPA)\n"
             f"**Vehicle:** [Infernus](https://gtacars.net/gta5/infernus)\n"
-            f"**Example:** [sexy lap](https://www.youtube.com/watch?v=YqB5ZLma7TQ)\n"
+            f"**Example:** [sexy lap](https://youtu.be/EGW3s_U7WzU)\n"
             f"\n💥 Framerate must be locked at 60fps 💥\n"
         )
         embed.color = tepcott_light_blue
