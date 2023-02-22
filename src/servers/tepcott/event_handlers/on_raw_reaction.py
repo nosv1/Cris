@@ -128,7 +128,7 @@ async def on_raw_reaction(
                 reaction_added=reaction_added,
             )
 
-        elif is_counterclockwise_arrow_emoji and member_is_admin:
+        elif is_counterclockwise_arrow_emoji and member_is_admin and reaction_added:
             reserve_assignments = await update_reserve_embed(
                 msg=msg, database=bot.tepcott_database
             )
