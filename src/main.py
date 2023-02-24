@@ -24,7 +24,6 @@ bot.load_extension("servers.tepcott.SlashCommands")
 async def on_ready():
     """ """
 
-    await bot.change_presence(status=discord.Status.offline)
     await eh_on_ready.on_ready(bot)
 
 
