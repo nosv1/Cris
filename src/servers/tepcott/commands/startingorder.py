@@ -21,6 +21,7 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
             ctx: discord.ApplicationContext,
             spreadsheet: Spreadsheet,
             number: int,
+            div_emojis: list[discord.Emoji],
             **kwargs,
         ) -> None:
             """ """
@@ -29,6 +30,7 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
 
             self.spreadsheet = spreadsheet
             self.number = number
+            self.div_emojis = div_emojis
 
         async def callback(self, interaction: discord.Interaction):
             """ """
@@ -42,7 +44,7 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
             ] = self.spreadsheet.get_starting_order(division_number=self.number)
 
             embed = discord.Embed()
-            embed.title = f"**Division {self.number} Starting Order**"
+            embed.title = f"**{div_emojis[self.number - 1]} __Starting Order__**"
             embed.color = ctx.guild.get_member(bot.user.id).color
             embed.description = ""
             for i, driver in enumerate(starting_order):
@@ -79,6 +81,7 @@ async def startingorder(ctx: discord.ApplicationContext, bot: Bot) -> None:
                 ctx=ctx,
                 spreadsheet=spreadsheet,
                 number=i,
+                div_emojis=div_emojis,
                 # label=f"Division {i}",
                 emoji=div_emojis[i - 1],
                 style=discord.ButtonStyle.gray,
