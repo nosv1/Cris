@@ -428,7 +428,7 @@ async def handle_reserve_needed_reaction(
 
     add_reserve_request(database=bot.tepcott_database, driver=driver)
     await reserve_log_channel.send(
-        f"{driver_member.mention} needs a reserve in {div_emojis[int(driver.division - 1)]}"
+        f"{driver_member.mention} needs a reserve in {div_emojis[int(driver.division) - 1]}"
     )
     reserve_assignemnts = await update_reserve_embed(
         msg=msg,
