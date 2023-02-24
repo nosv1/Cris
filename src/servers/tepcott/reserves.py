@@ -161,7 +161,7 @@ async def handle_assignment_changes(
         await reserve_member.remove_roles(reserve_roles[division - 1])
 
         await reserve_log.send(
-            f"{reserve_member.mention} is no longer assigned a {div_emojis[division-1]} reserve - was assigned to {driver.social_club_name}"
+            f"{reserve_member.mention} is no longer assigned to a {div_emojis[division-1]} driver - was assigned to {driver.social_club_name}"
         )
 
         is_reacter = reacter is not None and reserve_id == reacter.id
