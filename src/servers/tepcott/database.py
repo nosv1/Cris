@@ -152,3 +152,23 @@ def get_reserves_available(
         reserves_available.append(reserve)
 
     return reserves_available
+
+
+def clear_reserves_available(database: Database):
+    """ """
+
+    database.connect()
+    sql = f"DELETE FROM {RESERVES_AVAILABLE_TABLE_NAME}"
+    database.cursor.execute(sql)
+    database.commit()
+    database.close()
+
+
+def clear_reserve_requests(database: Database):
+    """ """
+
+    database.connect()
+    sql = f"DELETE FROM {RESERVE_REQUESTS_TABLE_NAME}"
+    database.cursor.execute(sql)
+    database.commit()
+    database.close()

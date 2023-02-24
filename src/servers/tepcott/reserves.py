@@ -7,6 +7,8 @@ from servers.tepcott.commands.startingtimes import get_starting_times_string
 from servers.tepcott.database import (
     add_reserve_available,
     add_reserve_request,
+    clear_reserve_requests,
+    clear_reserves_available,
     get_reserves_available,
     get_reserve_requests,
     remove_reserve_available,
@@ -602,3 +604,10 @@ async def reset_reserve_msg(msg: discord.Message):
     )
 
     await msg.edit(content=content_str, embed=embed)
+
+
+async def clear_reserves(msg: discord.Message, bot: Bot):
+    """"""
+    clear_reserves_available(database=bot.tepcott_database)
+    clear_reserve_requests(database=bot.tepcott_database)
+    await reset_reserve_msg(msg=msg)

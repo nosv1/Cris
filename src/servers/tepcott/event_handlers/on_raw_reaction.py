@@ -8,6 +8,7 @@ from servers.tepcott.commands.raceday import (
     handle_raceday_send_reaction,
 )
 from servers.tepcott.reserves import (
+    clear_reserves,
     handle_reserve_available_reaction,
     handle_reserve_needed_reaction,
     reset_reserve_msg,
@@ -84,6 +85,7 @@ async def on_raw_reaction(
         is_div_emoji = re.match(r"D\d", payload.emoji.name)
         is_x_emoji = payload.emoji.name == "❌"
         is_counterclockwise_arrow_emoji = payload.emoji.name == "🔄"
+        is_trash_can = payload.emoji.name == "🗑️"
 
         if is_x_emoji and member_is_admin:
             await reset_reserve_msg(msg)
@@ -134,6 +136,9 @@ async def on_raw_reaction(
             )
             Spreadsheet().set_reserves(reserve_assignments)
             await msg.remove_reaction(payload.emoji, member)
+
+        elif is_trash_can and member_is_admin:
+            await clear_reserves(msg=msg, database=bot.tepcott_database)
 
         # end work
         await msg.remove_reaction(cris_emoji, bot.user)
