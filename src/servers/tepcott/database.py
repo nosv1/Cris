@@ -1,5 +1,7 @@
 import copy
 from Database import Database
+from datetime import datetime
+
 from servers.tepcott.spreadsheet import SpreadsheetDriver
 from servers.tepcott.tepcott import (
     RESERVE_REQUESTS_TABLE_NAME,
@@ -20,8 +22,8 @@ def add_reserve_available(database: Database, reserve: SpreadsheetDriver):
     database.connect()
     sql = (
         f"INSERT INTO {RESERVES_AVAILABLE_TABLE_NAME} "
-        f"({RESERVES_AVAILABLE_DISCORD_IDS_COLUMN}, {RESERVES_AVAILABLE_DIVISIONS_COLUMN}, {RESERVES_AVAILABLE_RESERVE_DIVISIONS_COLUMN}) "
-        f"VALUES ('{reserve.discord_id}', '{reserve.division}', '{reserve.reserve_division}') "
+        f"({RESERVES_AVAILABLE_AVAILABLE_IDS_COLUMN}, {RESERVES_AVAILABLE_DISCORD_IDS_COLUMN}, {RESERVES_AVAILABLE_DIVISIONS_COLUMN}, {RESERVES_AVAILABLE_RESERVE_DIVISIONS_COLUMN}) "
+        f"VALUES ('{int(datetime.utcnow().timestamp())}', '{reserve.discord_id}', '{reserve.division}', '{reserve.reserve_division}') "
         f"ON DUPLICATE KEY UPDATE "
         f"{RESERVES_AVAILABLE_DISCORD_IDS_COLUMN} = '{reserve.discord_id}', "
         f"{RESERVES_AVAILABLE_DIVISIONS_COLUMN} = '{reserve.division}', "
@@ -39,8 +41,8 @@ def add_reserve_request(database: Database, driver: SpreadsheetDriver):
     database.connect()
     sql = (
         f"INSERT INTO {RESERVE_REQUESTS_TABLE_NAME} "
-        f"({RESERVE_REQUESTS_DISCORD_IDS_COLUMN}, {RESERVE_REQUESTS_DIVISIONS_COLUMN}) "
-        f"VALUES ('{driver.discord_id}', '{driver.division}') "
+        f"({RESERVE_REQUESTS_REQUEST_IDS_COLUMN}, {RESERVE_REQUESTS_DISCORD_IDS_COLUMN}, {RESERVE_REQUESTS_DIVISIONS_COLUMN}) "
+        f"VALUES ('{int(datetime.utcnow().timestamp())}', '{driver.discord_id}', '{driver.division}') "
         f"ON DUPLICATE KEY UPDATE {RESERVE_REQUESTS_DIVISIONS_COLUMN} = '{driver.division}'"
     )
     database.cursor.execute(sql)
