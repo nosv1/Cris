@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class Database:
+class SQLDatabase:
     def __init__(self, database_name: str):
         self.database_name = database_name
 

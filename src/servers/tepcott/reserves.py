@@ -1,5 +1,5 @@
 from Bot import Bot
-from Database import Database
+from Database import SQLDatabase
 from datetime import datetime, timedelta
 import discord
 
@@ -35,7 +35,7 @@ from typing import Optional, Union
 
 
 def get_reserve_assignments(
-    database: Database, drivers_by_discord_id: dict[int, SpreadsheetDriver]
+    database: SQLDatabase, drivers_by_discord_id: dict[int, SpreadsheetDriver]
 ) -> tuple[list[SpreadsheetDriver], dict[int, list[SpreadsheetDriver]]]:
     """returns a list of all reserve needed drivers with .reserve set as a
     reserve driver or reserve needed string and then the leftover available
@@ -210,7 +210,7 @@ async def handle_assignment_changes(
 
 async def update_reserve_embed(
     msg: discord.Message,
-    database: Database,
+    database: SQLDatabase,
     reserve_log: Optional[discord.TextChannel] = None,
     spreadsheet: Optional[Spreadsheet] = None,
     drivers_by_discord_id: Optional[dict[int, SpreadsheetDriver]] = None,

@@ -1,5 +1,5 @@
 import copy
-from Database import Database
+from Database import SQLDatabase
 from datetime import datetime
 
 from servers.tepcott.spreadsheet import SpreadsheetDriver
@@ -16,7 +16,7 @@ from servers.tepcott.tepcott import (
 )
 
 
-def add_reserve_available(database: Database, reserve: SpreadsheetDriver):
+def add_reserve_available(database: SQLDatabase, reserve: SpreadsheetDriver):
     """ """
 
     database.connect()
@@ -35,7 +35,7 @@ def add_reserve_available(database: Database, reserve: SpreadsheetDriver):
     database.close()
 
 
-def add_reserve_request(database: Database, driver: SpreadsheetDriver):
+def add_reserve_request(database: SQLDatabase, driver: SpreadsheetDriver):
     """ """
 
     database.connect()
@@ -50,7 +50,7 @@ def add_reserve_request(database: Database, driver: SpreadsheetDriver):
     database.close()
 
 
-def remove_reserve_available(database: Database, reserve: SpreadsheetDriver):
+def remove_reserve_available(database: SQLDatabase, reserve: SpreadsheetDriver):
     """ """
 
     database.connect()
@@ -65,7 +65,7 @@ def remove_reserve_available(database: Database, reserve: SpreadsheetDriver):
     database.close()
 
 
-def remove_reserve_request(database: Database, driver: SpreadsheetDriver):
+def remove_reserve_request(database: SQLDatabase, driver: SpreadsheetDriver):
     """ """
 
     database.connect()
@@ -79,7 +79,7 @@ def remove_reserve_request(database: Database, driver: SpreadsheetDriver):
 
 
 def get_reserve_requests(
-    database: Database, drivers_by_discord_id: dict[int, SpreadsheetDriver]
+    database: SQLDatabase, drivers_by_discord_id: dict[int, SpreadsheetDriver]
 ) -> list[SpreadsheetDriver]:
     """ """
 
@@ -114,7 +114,7 @@ def get_reserve_requests(
 
 
 def get_reserves_available(
-    database: Database, drivers_by_discord_id: dict[int, SpreadsheetDriver]
+    database: SQLDatabase, drivers_by_discord_id: dict[int, SpreadsheetDriver]
 ) -> list[SpreadsheetDriver]:
     """ """
 
@@ -156,7 +156,7 @@ def get_reserves_available(
     return reserves_available
 
 
-def clear_reserves_available(database: Database):
+def clear_reserves_available(database: SQLDatabase):
     """ """
 
     database.connect()
@@ -166,7 +166,7 @@ def clear_reserves_available(database: Database):
     database.close()
 
 
-def clear_reserve_requests(database: Database):
+def clear_reserve_requests(database: SQLDatabase):
     """ """
 
     database.connect()
