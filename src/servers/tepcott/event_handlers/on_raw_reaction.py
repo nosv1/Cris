@@ -138,7 +138,7 @@ async def on_raw_reaction(
             await msg.remove_reaction(payload.emoji, member)
 
         elif is_trash_can and member_is_admin:
-            await clear_reserves(msg=msg, database=bot.tepcott_database)
+            await clear_reserves(msg=msg, bot=bot)
 
         # end work
         await msg.remove_reaction(cris_emoji, bot.user)
