@@ -545,17 +545,17 @@ async def add_reserves_reactions(msg: discord.Message):
         await msg.add_reaction(div_emoji)
 
 
-async def reset_reserve_msg(msg: discord.Message):
+async def clear_reserve_roles(guild: discord.Guild):
     """ """
-    print(f"Resetting reserve embed in {msg.guild.name} ({msg.guild.id})")
-
-    await clear_reserves_reactions(msg=msg)
-    await add_reserves_reactions(msg=msg)
-
-    reserve_roles = get_roles(guild=msg.guild, role_ids=RESERVE_DIVISION_ROLE_IDS[1:])
+    reserve_roles = get_roles(guild=guild, role_ids=RESERVE_DIVISION_ROLE_IDS[1:])
     for role in reserve_roles:
         for member in role.members:
             await member.remove_roles(role)
+
+
+async def clear_reserve_msg(msg: discord.Message) -> discord.Message:
+    """ """
+    print(f"Clearing reserve msg in {msg.guild.name} ({msg.guild.id})")
 
     embed = msg.embeds[0]
     embed.color = discord.Color(LIGHT_BLUE)
@@ -603,11 +603,28 @@ async def reset_reserve_msg(msg: discord.Message):
         ),
     )
 
-    await msg.edit(content=content_str, embed=embed)
+    msg = await msg.edit(content=content_str, embed=embed)
+    return msg
 
 
-async def clear_reserves(msg: discord.Message, bot: Bot):
+async def reset_reserve_msg(msg: discord.Message) -> discord.Message:
+    """ """
+    print(f"Resetting reserve msg in {msg.guild.name} ({msg.guild.id})")
+
+    await clear_reserves_reactions(msg=msg)
+    await add_reserves_reactions(msg=msg)
+    msg = await clear_reserve_msg(msg=msg)
+
+    return msg
+
+
+async def clear_reserves(msg: discord.Message, bot: Bot) -> discord.Message:
     """"""
+    print(f"Clearing reserves in {msg.guild.name} ({msg.guild.id})")
+
     clear_reserves_available(database=bot.tepcott_database)
     clear_reserve_requests(database=bot.tepcott_database)
-    await reset_reserve_msg(msg=msg)
+    await clear_reserve_roles(guild=msg.guild)
+    msg = await reset_reserve_msg(msg=msg)
+
+    return msg

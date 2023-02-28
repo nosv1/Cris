@@ -9,6 +9,7 @@ from servers.tepcott.commands.raceday import (
 )
 from servers.tepcott.reserves import (
     clear_reserves,
+    clear_reserve_msg,
     handle_reserve_available_reaction,
     handle_reserve_needed_reaction,
     reset_reserve_msg,
@@ -131,6 +132,8 @@ async def on_raw_reaction(
             )
 
         elif is_counterclockwise_arrow_emoji and member_is_admin and reaction_added:
+            # this is kinda gross having to update message twice...
+            msg = await clear_reserve_msg(msg=msg)
             reserve_assignments = await update_reserve_embed(
                 msg=msg, database=bot.tepcott_database
             )
